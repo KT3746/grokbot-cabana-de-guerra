@@ -797,3 +797,17 @@ button.primary,
   background: linear-gradient(#5a2820, #3a1812);
   box-shadow: 0 2px 0 #1a0806, inset 0 1px 0 #8a4030;
 }
+
+/* v1.2.0 atmosphere */
+.chip {
+  background: #0a0e12cc;
+  border: 1px solid #2a323866;
+}
+.bar {
+  background: #00000099;
+}
+.banner {
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: "Oswald", "Source Sans 3", sans-serif;
+}

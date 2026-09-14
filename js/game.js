@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.1.0";
+} from "./data.js?v=1.2.0";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.1.0";
-import { STORAGE_KEY } from "./version.js?v=1.1.0";
+} from "./world.js?v=1.2.0";
+import { STORAGE_KEY } from "./version.js?v=1.2.0";
 
 export const MODE = {
   MENU: "menu",
@@ -52,6 +52,7 @@ export class Game {
     this.flash = 0;
     this.toasts = [];
     this.particles = [];
+    this.fog = [];
     this.floaters = [];
     this.cam = { x: 0, y: 0 };
     this.viewW = 800;
@@ -108,6 +109,7 @@ export class Game {
     this.kills = 0;
     this.nightLight = 0;
     this.particles = [];
+    this.fog = [];
     this.floaters = [];
     this.toasts = [];
     this.banner = "";
@@ -167,21 +169,29 @@ export class Game {
     this.bannerT = 3.2;
   }
 
-  burst(x, y, n, color, speed = 80) {
+  burst(x, y, n, color, speed = 80, opts = {}) {
+    const soft = !!opts.soft;
+    const grav = opts.grav != null ? opts.grav : 20;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
-      const s = rand(20, speed);
+      const s = rand(soft ? 8 : 20, soft ? speed * 0.45 : speed);
       this.particles.push({
-        x,
-        y,
+        x: x + (soft ? rand(-18, 18) : 0),
+        y: y + (soft ? rand(-10, 10) : 0),
         vx: Math.cos(a) * s,
-        vy: Math.sin(a) * s - 20,
-        life: rand(0.25, 0.7),
-        max: 0.7,
-        size: rand(2, 4.5),
+        vy: Math.sin(a) * s - grav,
+        life: rand(soft ? 0.8 : 0.25, soft ? 2.2 : 0.7),
+        max: soft ? 2.2 : 0.7,
+        size: soft ? rand(10, 28) : rand(2, 4.5),
         color,
+        soft,
       });
     }
+  }
+
+  blood(x, y, n = 8) {
+    this.burst(x, y, n, "#5a1818", 95);
+    this.burst(x, y, Math.max(3, (n / 2) | 0), "#2a0c0c", 55);
   }
 
   floater(x, y, text, color = "#fff") {
@@ -246,6 +256,33 @@ export class Game {
     if (input.hotbarKey >= 0) this.hot = input.hotbarKey;
 
     this.shake = Math.max(0, this.shake - dt * 18);
+    // nevoa noturna
+    if (this.nightLight > 0.25 && this.mode === MODE.PLAY) {
+      if (!this.fog) this.fog = [];
+      if (this.fog.length < 28 && Math.random() < dt * 6) {
+        const cam = this.cam;
+        this.fog.push({
+          x: cam.x + rand(-40, this.viewW + 40),
+          y: cam.y + rand(0, this.viewH),
+          vx: rand(-12, 18),
+          vy: rand(-4, 4),
+          life: rand(2.5, 5),
+          max: 5,
+          size: rand(40, 90) * SCALE,
+          a: rand(0.04, 0.12) * this.nightLight,
+        });
+      }
+      for (const f of this.fog) {
+        f.x += f.vx * dt;
+        f.y += f.vy * dt;
+        f.life -= dt;
+      }
+      this.fog = this.fog.filter((f) => f.life > 0);
+    } else if (this.fog && this.fog.length) {
+      for (const f of this.fog) f.life -= dt * 2;
+      this.fog = this.fog.filter((f) => f.life > 0);
+    }
+
     this.flash = Math.max(0, this.flash - dt);
     if (this.bannerT > 0) this.bannerT -= dt;
 
@@ -441,13 +478,16 @@ export class Game {
       p.actCd = 0.32;
       tree.hp -= 1;
       this.audio.chop();
-      this.burst(tree.x, tree.y, 6, "#8d6e43", 70);
+      this.burst(tree.x, tree.y - 8 * SCALE, 8, "#5a4030", 80);
+      this.floater(tree.x, tree.y - 18, "corte", "#c4a574");
+      this.shake = Math.max(this.shake, 1.5);
       if (tree.hp <= 0) {
         tree.stump = true;
         const n = irand(3, 5);
         this.inv.madeira += n;
-        this.floater(tree.x, tree.y - 10, `+${n} madeira`, "#c4a574");
-        this.toast(`Cortou uma árvore (+${n} madeira)`);
+        this.burst(tree.x, tree.y, 14, "#3a2818", 100);
+        this.floater(tree.x, tree.y - 10, "+" + n + " madeira", "#c4a574");
+        this.toast("Cortou uma arvore (+" + n + " madeira)");
       }
       return;
     }
@@ -456,7 +496,9 @@ export class Game {
       p.actCd = 0.34;
       rock.hp -= 1;
       this.audio.mine();
-      this.burst(rock.x, rock.y, 6, "#b0b8c0", 60);
+      this.burst(rock.x, rock.y, 8, "#6a727c", 75);
+      this.floater(rock.x, rock.y - 14, "mina", "#9aa3ad");
+      this.shake = Math.max(this.shake, 1.2);
       if (rock.hp <= 0) {
         rock.gone = true;
         const n = irand(2, 4);
@@ -470,7 +512,9 @@ export class Game {
       p.actCd = 0.4;
       vein.hp -= 1;
       this.audio.mine();
-      this.burst(vein.x, vein.y, 7, "#cfd8dc", 70);
+      this.burst(vein.x, vein.y, 9, "#8a9aaa", 85);
+      this.floater(vein.x, vein.y - 14, "mina", "#c5d0d8");
+      this.shake = Math.max(this.shake, 1.4);
       if (vein.hp <= 0) {
         vein.gone = true;
         const n = irand(1, 2);
@@ -867,14 +911,16 @@ export class Game {
     z.hurt = 0.35;
     if (Number.isFinite(kx)) z.x += kx * 0.012;
     if (Number.isFinite(ky)) z.y += ky * 0.012;
-    this.burst(z.x, z.y, 5, "#6b7a4b", 70);
-    this.floater(z.x, z.y - 14, `-${Math.round(dmg)}`, "#ffe082");
+    this.blood(z.x, z.y, src === "attack" ? 10 : 6);
+    this.floater(z.x, z.y - 14, "-" + Math.round(dmg), "#d4a090");
     if (z.hp <= 0) {
       this.kills += 1;
-      this.floater(z.x, z.y - 22, "nocaute", "#7dce82");
+      this.blood(z.x, z.y, 16);
+      this.shake = Math.max(this.shake, 5);
+      this.floater(z.x, z.y - 22, "nocaute", "#c4a060");
       if (Math.random() < 0.12) {
         this.inv.comida += 1;
-        this.floater(z.x, z.y, "+1 comida", "#e07a5f");
+        this.floater(z.x, z.y, "+1 comida", "#c07050");
       }
     }
   }
@@ -890,7 +936,7 @@ export class Game {
     this.flash = 0.15;
     this.deathBy = kind || src;
     this.audio.hurt();
-    this.burst(this.player.x, this.player.y, 6, "#e85d4c", 60);
+    this.blood(this.player.x, this.player.y, 12);
     this.floater(this.player.x, this.player.y - 18, `-${Math.round(dmg)}`, "#e85d4c");
   }
 
