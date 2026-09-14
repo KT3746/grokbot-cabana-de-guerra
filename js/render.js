@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.1.0";
-import { T } from "./world.js?v=1.1.0";
-import { MODE } from "./game.js?v=1.1.0";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.2.0";
+import { T } from "./world.js?v=1.2.0";
+import { MODE } from "./game.js?v=1.2.0";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -66,6 +66,7 @@ export class Renderer {
 
     ctx.save();
     ctx.translate(-g.cam.x + sx, -g.cam.y + sy);
+    this._fog();
     this._zombies();
     this._player();
     this._arrows();
@@ -534,9 +535,35 @@ export class Renderer {
   _particles() {
     const ctx = this.ctx;
     for (const p of this.game.particles) {
-      ctx.globalAlpha = clamp01(p.life / p.max);
+      const a = clamp01(p.life / p.max);
+      ctx.globalAlpha = p.soft ? a * 0.35 : a;
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size);
+      if (p.soft) {
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.size, p.size * 0.45, 0, 0, 7);
+        ctx.fill();
+      } else {
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  _fog() {
+    const fog = this.game.fog;
+    if (!fog || !fog.length) return;
+    const ctx = this.ctx;
+    for (const f of fog) {
+      const a = clamp01(f.life / f.max) * (f.a || 0.08);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = "#9aa8b4";
+      ctx.beginPath();
+      ctx.ellipse(f.x, f.y, f.size, f.size * 0.38, 0, 0, 7);
+      ctx.fill();
+      ctx.fillStyle = "#6a7888";
+      ctx.beginPath();
+      ctx.ellipse(f.x + f.size * 0.2, f.y + 4, f.size * 0.65, f.size * 0.28, 0, 0, 7);
+      ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
@@ -569,6 +596,11 @@ export class Renderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = "rgba(4, 6, 14, " + 0.72 * amt + ")";
     ctx.fillRect(0, 0, w, h);
+    if (amt > 0.15 && amt < 0.85) {
+      const dusk = Math.sin(amt * Math.PI) * 0.14;
+      ctx.fillStyle = "rgba(60, 18, 8, " + dusk + ")";
+      ctx.fillRect(0, 0, w, h);
+    }
     const vig = ctx.createRadialGradient(w * 0.5, h * 0.45, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
     vig.addColorStop(0, "rgba(0,0,0,0)");
     vig.addColorStop(1, "rgba(0,0,0," + 0.45 * amt + ")");
