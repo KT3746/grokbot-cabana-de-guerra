@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.2.1";
+} from "./data.js?v=1.2.2";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.2.1";
-import { STORAGE_KEY } from "./version.js?v=1.2.1";
+} from "./world.js?v=1.2.2";
+import { STORAGE_KEY } from "./version.js?v=1.2.2";
 
 export const MODE = {
   MENU: "menu",
@@ -190,8 +190,9 @@ export class Game {
   }
 
   blood(x, y, n = 8) {
-    this.burst(x, y, n, "#5a1818", 95);
-    this.burst(x, y, Math.max(3, (n / 2) | 0), "#2a0c0c", 55);
+    this.burst(x, y, n, "#a02828", 110);
+    this.burst(x, y, Math.max(4, (n / 2) | 0), "#5a1010", 70);
+    this.burst(x, y, 3, "#d04040", 50);
   }
 
   floater(x, y, text, color = "#fff") {
@@ -261,7 +262,7 @@ export class Game {
     // nevoa noturna
     if (this.nightLight > 0.25 && this.mode === MODE.PLAY) {
       if (!this.fog) this.fog = [];
-      if (this.fog.length < 28 && Math.random() < dt * 6) {
+      if (this.fog.length < 14 && Math.random() < dt * 3.5) {
         const cam = this.cam;
         this.fog.push({
           x: cam.x + rand(-40, this.viewW + 40),
@@ -270,8 +271,8 @@ export class Game {
           vy: rand(-4, 4),
           life: rand(2.5, 5),
           max: 5,
-          size: rand(40, 90) * SCALE,
-          a: rand(0.04, 0.12) * this.nightLight,
+          size: rand(28, 64) * SCALE,
+          a: rand(0.02, 0.055) * this.nightLight,
         });
       }
       for (const f of this.fog) {
@@ -475,14 +476,18 @@ export class Game {
   _tryInteract(dt) {
     const p = this.player;
     if (p.actCd > 0) return;
-    const reach = 72 * SCALE;
+    const reach = 92 * SCALE;
     const tree = nearestNode(this.world.trees, p.x, p.y, (t) => !t.stump, reach);
     if (tree) {
-      p.actCd = 0.32;
+      p.actCd = 0.28;
+      if (tree.maxHp == null) tree.maxHp = tree.hp;
       tree.hp -= 1;
       this.audio.chop();
       this.burst(tree.x, tree.y - 8 * SCALE, 8, "#5a4030", 80);
       this.shake = Math.max(this.shake, 1.5);
+      const done = Math.max(0, (tree.maxHp || 8) - tree.hp);
+      const need = tree.maxHp || 8;
+      this.floater(tree.x, tree.y - 18, done + "/" + need, "#c4a574");
       if (tree.hp <= 0) {
         tree.stump = true;
         const n = irand(3, 5);
@@ -550,7 +555,9 @@ export class Game {
       } else {
         this.toast("Ainda está crescendo…");
       }
+      return;
     }
+    this.toast("Nada ao alcance. Chegue mais perto e use Agir (E).");
   }
 
   _nearPlot(reach) {

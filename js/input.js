@@ -51,14 +51,12 @@ export class Input {
       onPtr(e);
       if (e.target && e.target.id === "game") {
         this.pointerDown = true;
-        this.actionPressed = true;
-        this.actionHeld = true;
         this.worldClick = true;
+        // clique so mira / marca o chao; coleta = E ou botao Agir
       }
     });
     window.addEventListener("pointerup", () => {
       this.pointerDown = false;
-      this.actionHeld = this._actBtn || this._keys.has("KeyE");
     });
     window.addEventListener("contextmenu", (e) => {
       if (e.target && (e.target.id === "game" || e.target.closest(".touch"))) e.preventDefault();
@@ -254,16 +252,26 @@ export class Input {
     if (this._keys.has("KeyD") || this._keys.has("ArrowRight")) kx += 1;
     if (this._keys.has("KeyW") || this._keys.has("ArrowUp")) ky -= 1;
     if (this._keys.has("KeyS") || this._keys.has("ArrowDown")) ky += 1;
-    if (this._stick.active) {
-      this.moveX = this._stick.x;
-      this.moveY = this._stick.y;
-    } else {
+    const keyMoving = kx !== 0 || ky !== 0;
+    const stickPow = Math.hypot(this._stick.x, this._stick.y);
+    // Teclado tem prioridade: joystick preso/zerado nao engole WASD no desktop
+    if (keyMoving) {
       const len = Math.hypot(kx, ky) || 1;
       this.moveX = kx / len;
       this.moveY = ky / len;
+    } else if (this._stick.active && stickPow > 0.08) {
+      this.moveX = this._stick.x;
+      this.moveY = this._stick.y;
+    } else {
+      this.moveX = 0;
+      this.moveY = 0;
+      if (this._stick.active && stickPow <= 0.08 && this._stick.id == null) {
+        this._stick.active = false;
+      }
     }
     this.attackHeld = this._atkBtn || this._keys.has("Space");
-    this.actionHeld = this._actBtn || this._keys.has("KeyE") || this.pointerDown;
+    // clique no canvas mira/seleciona; Agir fica em E ou botao Agir (nao mouse hold)
+    this.actionHeld = this._actBtn || this._keys.has("KeyE");
   }
 
   consumePresses() {
