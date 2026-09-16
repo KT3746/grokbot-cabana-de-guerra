@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.2.0";
+} from "./data.js?v=1.2.1";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.2.0";
-import { STORAGE_KEY } from "./version.js?v=1.2.0";
+} from "./world.js?v=1.2.1";
+import { STORAGE_KEY } from "./version.js?v=1.2.1";
 
 export const MODE = {
   MENU: "menu",
@@ -248,6 +248,8 @@ export class Game {
     }
 
     if (this.showCraft) {
+      this.shake = Math.max(0, this.shake - dt * 18);
+      this.flash = Math.max(0, this.flash - dt);
       this._updateFx(dt);
       input.consumePresses();
       return;
@@ -328,7 +330,7 @@ export class Game {
       f.t -= dt;
       f.y -= 22 * dt;
     }
-    this.floaters = this.floaters.filter((f) => f.t > 0);
+    this.floaters = this.floaters.filter((f) => f.t > 0).slice(-24);
     for (const t of this.toasts) t.t -= dt;
     this.toasts = this.toasts.filter((t) => t.t > 0);
   }
@@ -369,9 +371,10 @@ export class Game {
       if (wantAct || input.actionPressed) this._tryRepair();
       if (wantAtk) this._tryAttack(input);
     } else {
-      if (input.actionPressed || (input.pointerDown && input.actionPressed)) this._tryPlace();
+      if (input.actionPressed) this._tryPlace();
       if (wantAtk) this._tryAttack(input);
-      if (wantAct && !input.actionPressed) this._tryInteract(dt);
+      // coleta continua disponivel com item de construcao selecionado
+      if (wantAct) this._tryInteract(dt);
     }
 
     if (input.worldClick) {
@@ -479,7 +482,6 @@ export class Game {
       tree.hp -= 1;
       this.audio.chop();
       this.burst(tree.x, tree.y - 8 * SCALE, 8, "#5a4030", 80);
-      this.floater(tree.x, tree.y - 18, "corte", "#c4a574");
       this.shake = Math.max(this.shake, 1.5);
       if (tree.hp <= 0) {
         tree.stump = true;
@@ -487,7 +489,7 @@ export class Game {
         this.inv.madeira += n;
         this.burst(tree.x, tree.y, 14, "#3a2818", 100);
         this.floater(tree.x, tree.y - 10, "+" + n + " madeira", "#c4a574");
-        this.toast("Cortou uma arvore (+" + n + " madeira)");
+        this.toast("Cortou uma árvore (+" + n + " madeira)");
       }
       return;
     }
@@ -497,7 +499,6 @@ export class Game {
       rock.hp -= 1;
       this.audio.mine();
       this.burst(rock.x, rock.y, 8, "#6a727c", 75);
-      this.floater(rock.x, rock.y - 14, "mina", "#9aa3ad");
       this.shake = Math.max(this.shake, 1.2);
       if (rock.hp <= 0) {
         rock.gone = true;
@@ -513,7 +514,6 @@ export class Game {
       vein.hp -= 1;
       this.audio.mine();
       this.burst(vein.x, vein.y, 9, "#8a9aaa", 85);
-      this.floater(vein.x, vein.y - 14, "mina", "#c5d0d8");
       this.shake = Math.max(this.shake, 1.4);
       if (vein.hp <= 0) {
         vein.gone = true;
@@ -576,7 +576,7 @@ export class Game {
     if (!kind) return;
     const key = { tocha: "tochas", cerca: "cercas", armadilha: "armadilhas" }[kind];
     if (this.inv[key] <= 0) {
-      this.toast(`Você não tem ${kind}s. Crie no menu.`);
+      this.toast("Você não tem " + key + ". Crie no menu.");
       return;
     }
     const ang = p.aim ?? p.facing ?? 0;
@@ -788,6 +788,7 @@ export class Game {
       facing: 0,
       walk: 0,
       hpMul,
+      r: (kind === "bruto" ? 15 : kind === "corredor" ? 10 : 12) * SCALE,
     });
     const z = this.zombies[this.zombies.length - 1];
     z.hp = (kind === "bruto" ? 90 : kind === "corredor" ? 20 : 28) * hpMul;
