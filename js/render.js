@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.2.0";
-import { T } from "./world.js?v=1.2.0";
-import { MODE } from "./game.js?v=1.2.0";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.2.1";
+import { T } from "./world.js?v=1.2.1";
+import { MODE } from "./game.js?v=1.2.1";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -632,8 +632,8 @@ export class Renderer {
 
     if (amt > 0.2) {
       this.ctx.save();
-      this.ctx.globalCompositeOperation = "soft-light";
-      this.ctx.fillStyle = "rgba(40, 20, 8, " + 0.18 * amt + ")";
+      this.ctx.globalCompositeOperation = "multiply";
+      this.ctx.fillStyle = "rgba(28, 14, 10, " + (0.22 * amt) + ")";
       this.ctx.fillRect(0, 0, w, h);
       this.ctx.restore();
     }
