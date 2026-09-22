@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
-Versão atual: **1.3.0** (correções de feedback e coleta) (nevoa, sangue, feedback de coleta) (tile 48 + DPR até 3; alcance de coleta corrigido). (aparece no rodapé da tela).
+Versão atual: **1.3.1** (correções de feedback e coleta) (nevoa, sangue, feedback de coleta) (tile 48 + DPR até 3; alcance de coleta corrigido). (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -66,7 +66,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro.
 - `index.html` — página do jogo (GitHub Pages aponta para a raiz de `main`)
 - `css/game.css` — interface
 - `js/` — lógica, desenho, som e controles
-- Os arquivos usam `?v=1.3.0` para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=1.3.1` para o navegador não ficar com versão antiga após uma atualização
 
 ## Créditos
 

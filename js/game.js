@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.3.0";
+} from "./data.js?v=1.3.1";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.3.0";
-import { STORAGE_KEY } from "./version.js?v=1.3.0";
+} from "./world.js?v=1.3.1";
+import { STORAGE_KEY } from "./version.js?v=1.3.1";
 
 export const MODE = {
   MENU: "menu",
@@ -379,7 +379,10 @@ export class Game {
       if (wantAct && !input.actionPressed) this._tryInteract(dt, false);
     } else if (building) {
       if (wantAtk) this._tryAttack(input);
-      if (input.actionPressed) {
+      // Perto de recurso/horta: Agir coleta. Longe: constrói.
+      if (wantAct && this._resourceInReach()) {
+        this._tryInteract(dt, input.actionPressed);
+      } else if (input.actionPressed) {
         const placed = this._tryPlace();
         if (!placed) this._tryInteract(dt, true);
       } else if (input.actionHeld) {
@@ -482,6 +485,17 @@ export class Game {
     }
   }
 
+
+  _resourceInReach() {
+    const p = this.player;
+    const reach = 92 * SCALE;
+    if (nearestNode(this.world.trees, p.x, p.y, (t) => !t.stump, reach)) return true;
+    if (nearestNode(this.world.rocks, p.x, p.y, (r) => !r.gone, reach)) return true;
+    if (nearestNode(this.world.veins, p.x, p.y, (v) => !v.gone, reach)) return true;
+    if (this._nearPlot(reach)) return true;
+    return false;
+  }
+
   _tryInteract(dt, fromPress = true) {
     const p = this.player;
     if (p.actCd > 0) return;
@@ -510,30 +524,40 @@ export class Game {
     const rock = nearestNode(this.world.rocks, p.x, p.y, (r) => !r.gone, reach);
     if (rock) {
       p.actCd = 0.34;
+      if (rock.maxHp == null) rock.maxHp = rock.hp;
       rock.hp -= 1;
       this.audio.mine();
       this.burst(rock.x, rock.y, 8, "#6a727c", 75);
       this.shake = Math.max(this.shake, 1.2);
+      const rDone = Math.max(0, (rock.maxHp || 6) - rock.hp);
+      const rNeed = rock.maxHp || 6;
+      this.floater(rock.x, rock.y - 18, rDone + "/" + rNeed, "#9aa3ad");
       if (rock.hp <= 0) {
         rock.gone = true;
         const n = irand(2, 4);
         this.inv.pedra += n;
         this.floater(rock.x, rock.y - 8, `+${n} pedra`, "#9aa3ad");
+        this.toast("Quebrou uma pedra (+" + n + " pedra)");
       }
       return;
     }
     const vein = nearestNode(this.world.veins, p.x, p.y, (v) => !v.gone, reach);
     if (vein) {
       p.actCd = 0.4;
+      if (vein.maxHp == null) vein.maxHp = vein.hp;
       vein.hp -= 1;
       this.audio.mine();
       this.burst(vein.x, vein.y, 9, "#8a9aaa", 85);
       this.shake = Math.max(this.shake, 1.4);
+      const vDone = Math.max(0, (vein.maxHp || 10) - vein.hp);
+      const vNeed = vein.maxHp || 10;
+      this.floater(vein.x, vein.y - 18, vDone + "/" + vNeed, "#d7dee4");
       if (vein.hp <= 0) {
         vein.gone = true;
         const n = irand(1, 2);
         this.inv.ferro += n;
         this.floater(vein.x, vein.y - 8, `+${n} ferro`, "#d7dee4");
+        this.toast("Minerou ferro (+" + n + " ferro)");
       }
       return;
     }
@@ -599,6 +623,7 @@ export class Game {
     const ang = p.aim ?? p.facing ?? 0;
     const tile = this._placeTile(ang);
     if (!tile || !tile.ok) {
+      this.toast("Não dá para construir aqui.");
       return false;
     }
     this.inv[key] -= 1;
