@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.3.1";
-import { T } from "./world.js?v=1.3.1";
-import { MODE } from "./game.js?v=1.3.1";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=1.4.0";
+import { T } from "./world.js?v=1.4.0";
+import { MODE } from "./game.js?v=1.4.0";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -70,6 +70,7 @@ export class Renderer {
     this._zombies();
     this._player();
     this._arrows();
+    this._focusNode();
     this._ghost();
     this._mark();
     this._particles();
@@ -78,6 +79,15 @@ export class Renderer {
 
     if (g.flash > 0) {
       ctx.fillStyle = "rgba(90,8,8," + g.flash * 0.45 + ")";
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    if (g.vignette > 0.01) {
+      const a = Math.min(0.72, g.vignette);
+      const grd = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.25, w * 0.5, h * 0.5, Math.max(w, h) * 0.72);
+      grd.addColorStop(0, "rgba(0,0,0,0)");
+      grd.addColorStop(1, "rgba(40,4,4," + a + ")");
+      ctx.fillStyle = grd;
       ctx.fillRect(0, 0, w, h);
     }
 
@@ -471,9 +481,20 @@ export class Renderer {
       ctx.fillRect(-w * 0.28, -h / 2 - 3 + bob, w * 0.56, h * 0.38);
       ctx.fillStyle = "#4a2018";
       ctx.fillRect(-w * 0.12, -h / 2 + h * 0.18 + bob, w * 0.24, 3);
-      ctx.fillStyle = brute ? "#c04020" : "#a03018";
-      ctx.fillRect(-w * 0.18, -h / 2 + 4 + bob, 3 * SCALE, 2.5 * SCALE);
-      ctx.fillRect(w * 0.06, -h / 2 + 4 + bob, 3 * SCALE, 2.5 * SCALE);
+      const wind = Math.min(1, z.windup || 0) / 0.32;
+      ctx.fillStyle = wind > 0.2 ? "#ff5030" : (brute ? "#c04020" : "#a03018");
+      const eye = (3 + wind * 2) * SCALE;
+      ctx.fillRect(-w * 0.18, -h / 2 + 4 + bob, eye, eye * 0.85);
+      ctx.fillRect(w * 0.06, -h / 2 + 4 + bob, eye, eye * 0.85);
+      if (wind > 0.35) {
+        ctx.globalAlpha = 0.25 + wind * 0.35;
+        ctx.strokeStyle = "#ff6040";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, w * 0.7 + wind * 8, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
 
       if (z.hurt > 0) {
         ctx.globalAlpha = 0.35;
@@ -503,6 +524,22 @@ export class Renderer {
       ctx.lineTo(a.x - a.vx * 0.04, a.y - a.vy * 0.04);
       ctx.stroke();
     }
+  }
+
+
+  _focusNode() {
+    const n = this.game.focusNode;
+    if (!n || n.x == null) return;
+    const ctx = this.ctx;
+    const pulse = 0.45 + Math.sin(this.t * 6) * 0.2;
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.strokeStyle = "#e8c878";
+    ctx.lineWidth = 2.5 * SCALE;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 18 * SCALE, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   _ghost() {
@@ -609,7 +646,7 @@ export class Renderer {
 
     ctx.globalCompositeOperation = "destination-out";
     const lights = [];
-    lights.push({ x: g.player.x, y: g.player.y, r: 150 * SCALE, p: 0.82 });
+    lights.push({ x: g.player.x, y: g.player.y, r: 170 * SCALE, p: 0.88 });
     const c = g.world.cabin;
     lights.push({ x: c.x, y: c.y + 10, r: 160 * SCALE, p: 0.88 });
     for (const t of g.world.torches) lights.push({ x: t.x, y: t.y, r: 130 * SCALE, p: 0.95 });

@@ -63,6 +63,7 @@ export class Input {
     });
 
     this._bindTouch();
+    this._bindFloatingStick();
   }
 
   _blockBrowserBtn(e) {
@@ -99,6 +100,45 @@ export class Input {
   _up(e) {
     this._blockBrowserBtn(e);
     this._keys.delete(e.code);
+  }
+
+
+  /** Joystick flutuante: toque na metade esquerda do jogo reposiciona o stick sob o dedo. */
+  _bindFloatingStick() {
+    const layer = document.getElementById("touch");
+    const stick = document.getElementById("stick");
+    if (!layer || !stick) return;
+    layer.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button")) return;
+      if (e.target.closest("#stick")) return;
+      const rect = layer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      if (x > rect.width * 0.45) return; // só metade esquerda
+      if (e.cancelable) e.preventDefault();
+      this.touchEnabled = true;
+      const half = stick.offsetWidth / 2;
+      const left = Math.max(8, Math.min(rect.width * 0.45 - stick.offsetWidth - 8, x - half));
+      const bottomFromTop = e.clientY - rect.top;
+      const bottom = Math.max(8, rect.height - bottomFromTop - half);
+      stick.style.left = left + "px";
+      stick.style.bottom = bottom + "px";
+      stick.style.right = "auto";
+      stick.style.top = "auto";
+      // reencaminha o mesmo ponteiro ao stick
+      try {
+        stick.dispatchEvent(new PointerEvent("pointerdown", {
+          bubbles: true,
+          cancelable: true,
+          pointerId: e.pointerId,
+          pointerType: e.pointerType,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          buttons: 1,
+        }));
+      } catch (_) {
+        /* PointerEvent antigo */
+      }
+    }, { passive: false });
   }
 
   _bindTouch() {

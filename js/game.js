@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.3.1";
+} from "./data.js?v=1.4.0";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.3.1";
-import { STORAGE_KEY } from "./version.js?v=1.3.1";
+} from "./world.js?v=1.4.0";
+import { STORAGE_KEY } from "./version.js?v=1.4.0";
 
 export const MODE = {
   MENU: "menu",
@@ -49,6 +49,9 @@ export class Game {
     this.banner = "";
     this.bannerT = 0;
     this.shake = 0;
+    this._hitStop = 0;
+    this.vignette = 0;
+    this.focusNode = null;
     this.flash = 0;
     this.toasts = [];
     this.particles = [];
@@ -193,6 +196,17 @@ export class Game {
     }
   }
 
+
+  vibrate(pattern = 12) {
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
+    } catch (_) { /* ignore */ }
+  }
+
+  hitStop(ms = 45) {
+    this._hitStop = Math.max(this._hitStop || 0, ms / 1000);
+  }
+
   blood(x, y, n = 8) {
     this.burst(x, y, n, "#a02828", 110);
     this.burst(x, y, Math.max(4, (n / 2) | 0), "#5a1010", 70);
@@ -209,6 +223,12 @@ export class Game {
   }
 
   update(dt, input) {
+    if (this._hitStop > 0) {
+      this._hitStop = Math.max(0, this._hitStop - dt);
+      dt *= 0.12;
+    }
+    if (this.vignette > 0) this.vignette = Math.max(0, this.vignette - dt * 1.8);
+
     if (this.uiLock > 0) this.uiLock = Math.max(0, this.uiLock - dt);
     if (this.mark) {
       this.mark.t -= dt;
@@ -395,6 +415,7 @@ export class Game {
     }
 
     this._refreshGhost();
+    this.focusNode = this._nearestResource();
     this.cam.x = clamp(p.x - this.viewW / 2, 0, Math.max(0, this.world.w - this.viewW));
     this.cam.y = clamp(p.y - this.viewH / 2, 0, Math.max(0, this.world.h - this.viewH));
   }
@@ -481,7 +502,11 @@ export class Game {
     }
     if (hit) {
       this.audio.hit();
-      this.shake = Math.max(this.shake, 4);
+      this.shake = Math.max(this.shake, 5.5);
+      this.hitStop(48);
+      this.vibrate([8, 20, 12]);
+    } else {
+      this.vibrate(6);
     }
   }
 
@@ -506,6 +531,7 @@ export class Game {
       if (tree.maxHp == null) tree.maxHp = tree.hp;
       tree.hp -= 1;
       this.audio.chop();
+      this.vibrate(10);
       this.burst(tree.x, tree.y - 8 * SCALE, 8, "#5a4030", 80);
       this.shake = Math.max(this.shake, 1.5);
       const done = Math.max(0, (tree.maxHp || 8) - tree.hp);
@@ -527,6 +553,7 @@ export class Game {
       if (rock.maxHp == null) rock.maxHp = rock.hp;
       rock.hp -= 1;
       this.audio.mine();
+      this.vibrate(10);
       this.burst(rock.x, rock.y, 8, "#6a727c", 75);
       this.shake = Math.max(this.shake, 1.2);
       const rDone = Math.max(0, (rock.maxHp || 6) - rock.hp);
@@ -547,6 +574,7 @@ export class Game {
       if (vein.maxHp == null) vein.maxHp = vein.hp;
       vein.hp -= 1;
       this.audio.mine();
+      this.vibrate(10);
       this.burst(vein.x, vein.y, 9, "#8a9aaa", 85);
       this.shake = Math.max(this.shake, 1.4);
       const vDone = Math.max(0, (vein.maxHp || 10) - vein.hp);
@@ -729,6 +757,9 @@ export class Game {
 
   _beginDusk() {
     this.phase = PHASE.DUSK;
+    this.vignette = 0.75;
+    this.vibrate([30, 55, 30]);
+    this.shake = Math.max(this.shake, 3);
     this.transT = 2.1;
     this.showCraft = false;
     this._banner("Anoiteceu… eles estão vindo.");
@@ -870,8 +901,15 @@ export class Game {
         moveWithCollide(this.world, z, Math.cos(side) * spd * dt, Math.sin(side) * spd * dt, rad, true);
       }
 
-      if (toP < rad + p.r + 6 && z.atk <= 0) {
+      // Telegrafa o bote ~0.28s antes (olhos/corpo piscando)
+      if (toP < rad + p.r + 28 && z.atk <= 0) {
+        z.windup = Math.min(0.32, (z.windup || 0) + dt);
+      } else {
+        z.windup = Math.max(0, (z.windup || 0) - dt * 2);
+      }
+      if (toP < rad + p.r + 6 && z.atk <= 0 && (z.windup || 0) >= 0.26) {
         z.atk = 0.85;
+        z.windup = 0;
         const dmgMul = night === 1 ? 0.62 : 1;
         const dmg = (z.kind === "bruto" ? 18 : z.kind === "corredor" ? 7 : 8) * dmgMul;
         this._hurtPlayer(dmg, "zombie", z.kind || "zumbi");
@@ -958,7 +996,9 @@ export class Game {
     if (z.hp <= 0) {
       this.kills += 1;
       this.blood(z.x, z.y, 16);
-      this.shake = Math.max(this.shake, 5);
+      this.shake = Math.max(this.shake, 6);
+    this.hitStop(35);
+    this.vibrate(14);
       this.floater(z.x, z.y - 22, "nocaute", "#c4a060");
       if (Math.random() < 0.12) {
         this.inv.comida += 1;
@@ -974,8 +1014,11 @@ export class Game {
     dmg = Math.min(dmg, 22);
     this.player.hp -= dmg;
     this.player.hurt = 0.35;
-    this.shake = 7;
-    this.flash = 0.15;
+    this.shake = 8;
+    this.flash = 0.2;
+    this.vignette = Math.max(this.vignette || 0, 0.55);
+    this.hitStop(55);
+    this.vibrate([18, 30, 18]);
     this.deathBy = kind || src;
     this.audio.hurt();
     this.blood(this.player.x, this.player.y, 12);
@@ -985,8 +1028,10 @@ export class Game {
   _hurtCabin(dmg) {
     if (!Number.isFinite(dmg) || dmg <= 0) return;
     this.world.cabin.hp -= dmg;
-    this.shake = 9;
+    this.shake = 11;
+    this.vignette = Math.max(this.vignette || 0, 0.4);
     this.audio.cabin();
+    this.vibrate([25, 40, 25]);
     const c = this.world.cabin;
     this.burst(c.doorX, c.doorY, 8, "#8d6e43", 70);
   }
