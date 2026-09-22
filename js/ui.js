@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=1.4.1";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.4.1";
-import { MODE, PHASE } from "./game.js?v=1.4.1";
+import { VERSION } from "./version.js?v=1.4.2";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.4.2";
+import { MODE, PHASE } from "./game.js?v=1.4.2";
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
@@ -100,9 +100,16 @@ export function bindUI(game, audio) {
   });
   $("btn-mute").textContent = audio.muted ? "Som off" : "Som on";
   bindTap("btn-ok-tut", () => {
-    if (game.uiLock > 0) return;
+    game.uiLock = 0;
     game.dismissTutorial();
   });
+  const tut = $("screen-tut");
+  if (tut) {
+    bindTap("screen-tut", () => {
+      game.uiLock = 0;
+      game.dismissTutorial();
+    });
+  }
 
   const unlock = () => { try { audio.unlock(); } catch (_) {} };
   window.addEventListener("pointerdown", unlock, { once: false });

@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.4.1";
+} from "./data.js?v=1.4.2";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.4.1";
-import { STORAGE_KEY } from "./version.js?v=1.4.1";
+} from "./world.js?v=1.4.2";
+import { STORAGE_KEY } from "./version.js?v=1.4.2";
 
 export const MODE = {
   MENU: "menu",
@@ -146,14 +146,25 @@ export class Game {
     this.loadBest();
   }
 
+
+  _centerCam() {
+    const p = this.player;
+    if (!p || !this.world) return;
+    this.cam.x = clamp(p.x - this.viewW / 2, 0, Math.max(0, this.world.w - this.viewW));
+    this.cam.y = clamp(p.y - this.viewH / 2, 0, Math.max(0, this.world.h - this.viewH));
+  }
+
   start() {
     this.resetRun();
     this.setMode(MODE.PLAY);
     this.showCraft = false;
     this.showTutorial = !this.seenTutorial;
-    if (this.showTutorial) this.uiLock = 0.55;
+    if (this.showTutorial) this.uiLock = 0.35;
     this.nightLight = 0;
     this.phase = PHASE.DAY;
+    this.phaseT = DAY_LEN;
+    this.phaseMax = DAY_LEN;
+    this._centerCam();
     this._banner("O dia começa — colete, plante e fortaleça.");
     this.audio.setNight(false);
   }
@@ -263,6 +274,10 @@ export class Game {
     }
 
     if (this.showTutorial) {
+      this._centerCam();
+      this.shake = Math.max(0, this.shake - dt * 18);
+      this._updateFx(dt);
+      // não congela o "feel" visual: câmera no jogador/cabana
       input.consumePresses();
       return;
     }
@@ -1084,6 +1099,8 @@ export class Game {
     this.showTutorial = false;
     this.seenTutorial = true;
     localStorage.setItem("nnc-tutorial", "1");
+    this._centerCam();
+    this.toast("WASD ou joystick para andar. Agir (E) coleta. Atacar na noite.");
   }
 
   skipToNight() {
