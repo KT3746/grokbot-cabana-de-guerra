@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.2.2";
+} from "./data.js?v=1.3.0";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.2.2";
-import { STORAGE_KEY } from "./version.js?v=1.2.2";
+} from "./world.js?v=1.3.0";
+import { STORAGE_KEY } from "./version.js?v=1.3.0";
 
 export const MODE = {
   MENU: "menu",
@@ -123,6 +123,10 @@ export class Game {
     this.buildGhost = null;
     this.deathBy = "";
     if (this.audio) this.audio.setNight(false);
+  }
+
+  dayNumber() {
+    return this.nightsSurvived + 1;
   }
 
   setMode(mode) {
@@ -365,17 +369,22 @@ export class Game {
     const wantAtk = input.attackPressed || input.attackHeld;
     const wantAct = input.actionPressed || input.actionHeld;
 
+    const building = this.hot >= 1 && this.hot <= 3;
     if (this.hot === 0) {
       if (wantAtk) this._tryAttack(input);
-      if (wantAct) this._tryInteract(dt);
+      if (wantAct) this._tryInteract(dt, input.actionPressed);
     } else if (this.hot === 4) {
-      if (wantAct || input.actionPressed) this._tryRepair();
+      if (input.actionPressed) this._tryRepair();
       if (wantAtk) this._tryAttack(input);
-    } else {
-      if (input.actionPressed) this._tryPlace();
+      if (wantAct && !input.actionPressed) this._tryInteract(dt, false);
+    } else if (building) {
       if (wantAtk) this._tryAttack(input);
-      // coleta continua disponivel com item de construcao selecionado
-      if (wantAct) this._tryInteract(dt);
+      if (input.actionPressed) {
+        const placed = this._tryPlace();
+        if (!placed) this._tryInteract(dt, true);
+      } else if (input.actionHeld) {
+        this._tryInteract(dt, false);
+      }
     }
 
     if (input.worldClick) {
@@ -473,7 +482,7 @@ export class Game {
     }
   }
 
-  _tryInteract(dt) {
+  _tryInteract(dt, fromPress = true) {
     const p = this.player;
     if (p.actCd > 0) return;
     const reach = 92 * SCALE;
@@ -557,7 +566,8 @@ export class Game {
       }
       return;
     }
-    this.toast("Nada ao alcance. Chegue mais perto e use Agir (E).");
+    if (fromPress) this.toast("Nada ao alcance. Chegue mais perto e use Agir (E).");
+    return false;
   }
 
   _nearPlot(reach) {
@@ -589,9 +599,7 @@ export class Game {
     const ang = p.aim ?? p.facing ?? 0;
     const tile = this._placeTile(ang);
     if (!tile || !tile.ok) {
-      this.toast("Não dá para construir aqui.");
-      this.mark = { x: p.x, y: p.y, t: 0.3 };
-      return;
+      return false;
     }
     this.inv[key] -= 1;
     const { x, y, tx, ty } = tile;
@@ -603,6 +611,7 @@ export class Game {
     this.mark = { x, y, t: 0.45 };
     this.toast(`Colocou ${kind}.`);
     p.actCd = 0.2;
+    return true;
   }
 
   _tryRepair() {
@@ -740,7 +749,7 @@ export class Game {
     this.nightLight = 0;
     respawnMorning(this.world);
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
-    this.toast("Um novo dia. Recursos voltaram a crescer.");
+    this.toast("Dia " + this.dayNumber() + ". Recursos voltaram a crescer.");
   }
 
   _burnZombies(dt) {
@@ -829,7 +838,7 @@ export class Game {
       let dy = Math.sin(ang) * spd * dt;
       const beforeX = z.x;
       const beforeY = z.y;
-      const rad = z.kind === "bruto" ? 15 : 11;
+      const rad = (z.kind === "bruto" ? 15 : 11) * SCALE;
       moveWithCollide(this.world, z, dx, dy, rad, true);
       if (Math.hypot(z.x - beforeX, z.y - beforeY) < spd * dt * 0.2) {
         const side = ang + (Math.random() < 0.5 ? 1.2 : -1.2);
@@ -842,7 +851,7 @@ export class Game {
         const dmg = (z.kind === "bruto" ? 18 : z.kind === "corredor" ? 7 : 8) * dmgMul;
         this._hurtPlayer(dmg, "zombie", z.kind || "zumbi");
       }
-      if (toC < 38 && z.atk <= 0) {
+      if (toC < 38 * SCALE && z.atk <= 0) {
         z.atk = 1.05;
         const dmgMul = night === 1 ? 0.55 : 1;
         const dmg = (z.kind === "bruto" ? 12 : z.kind === "corredor" ? 4 : 5) * dmgMul;
@@ -877,7 +886,7 @@ export class Game {
       }
       for (const z of this.zombies) {
         if (z.hp <= 0) continue;
-        const r = (z.kind === "bruto" ? 15 : 11) * SCALE;
+        const r = (z.kind === "bruto" ? 15 : z.kind === "corredor" ? 10 : 12) * SCALE;
         if (dist(a.x, a.y, z.x, z.y) < r + 14 * SCALE) {
           this._hurtZombie(z, a.dmg, a.vx * 0.15, a.vy * 0.15);
           a.life = 0;

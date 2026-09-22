@@ -1,4 +1,4 @@
-import { TILE, hash2, irand, rand } from "./data.js?v=1.2.2";
+import { TILE, SCALE, hash2, irand, rand } from "./data.js?v=1.3.0";
 
 export const T = {
   GRASS: 0,
@@ -183,19 +183,19 @@ export function circleHitsSolid(world, x, y, r, opts = {}) {
   }
   for (const tr of world.trees) {
     if (tr.stump) continue;
-    if (Math.hypot(x - tr.x, y - tr.y) < r + 12) return true;
+    if (Math.hypot(x - tr.x, y - tr.y) < r + 12 * SCALE) return true;
   }
   for (const rk of world.rocks) {
     if (rk.gone) continue;
-    if (Math.hypot(x - rk.x, y - rk.y) < r + 10) return true;
+    if (Math.hypot(x - rk.x, y - rk.y) < r + 10 * SCALE) return true;
   }
   for (const v of world.veins) {
     if (v.gone) continue;
-    if (Math.hypot(x - v.x, y - v.y) < r + 10) return true;
+    if (Math.hypot(x - v.x, y - v.y) < r + 10 * SCALE) return true;
   }
   for (const f of world.fences) {
     if (f.hp <= 0) continue;
-    if (circleRect(x, y, r, f.x - 14, f.y - 14, 28, 28)) return true;
+    if (circleRect(x, y, r, f.x - 14 * SCALE, f.y - 14 * SCALE, 28 * SCALE, 28 * SCALE)) return true;
   }
   return false;
 }
@@ -259,11 +259,20 @@ export function respawnMorning(world) {
   }
 }
 
-export function randomEdgeSpawn(world) {
-  const side = irand(0, 3);
-  const m = 48;
-  if (side === 0) return { x: rand(m, world.w - m), y: m };
-  if (side === 1) return { x: rand(m, world.w - m), y: world.h - m };
-  if (side === 2) return { x: m, y: rand(m, world.h - m) };
-  return { x: world.w - m, y: rand(m, world.h - m) };
+export function randomEdgeSpawn(world, opts = {}) {
+  const m = TILE * 2.5;
+  for (let i = 0; i < 60; i++) {
+    const side = irand(0, 3);
+    let x, y;
+    if (side === 0) { x = rand(m, world.w - m); y = m; }
+    else if (side === 1) { x = rand(m, world.w - m); y = world.h - m; }
+    else if (side === 2) { x = m; y = rand(m, world.h - m); }
+    else { x = world.w - m; y = rand(m, world.h - m); }
+    const t = tileAtWorld(world, x, y);
+    if (t === T.WATER || t === T.WALL || t === T.FLOOR) continue;
+    if (circleHitsSolid(world, x, y, 12 * SCALE, { forZombie: true })) continue;
+    if (opts.avoidX != null && Math.hypot(x - opts.avoidX, y - (opts.avoidY || 0)) < (opts.avoidR || 0)) continue;
+    return { x, y };
+  }
+  return { x: world.w * 0.15, y: world.h * 0.15 };
 }

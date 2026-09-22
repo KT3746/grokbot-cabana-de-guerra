@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=1.2.2";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.2.2";
-import { MODE, PHASE } from "./game.js?v=1.2.2";
+import { VERSION } from "./version.js?v=1.3.0";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=1.3.0";
+import { MODE, PHASE } from "./game.js?v=1.3.0";
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
@@ -201,9 +201,11 @@ function sync(game, audio) {
 
   if (game.mode !== MODE.PLAY && game.mode !== MODE.PAUSE) return;
 
-  const nightNum = game.phase === PHASE.DAY || game.phase === PHASE.DAWN
-    ? Math.max(1, game.nightsSurvived)
-    : game.nightsSurvived + 1;
+  const nightNum = game.phase === PHASE.DAY
+    ? game.nightsSurvived + 1
+    : game.phase === PHASE.DAWN
+      ? Math.max(1, game.nightsSurvived)
+      : game.nightsSurvived + 1;
   const phaseName = {
     [PHASE.DAY]: "Dia",
     [PHASE.DUSK]: "Entardecer",
