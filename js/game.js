@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=1.4.0";
+} from "./data.js?v=1.4.1";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=1.4.0";
-import { STORAGE_KEY } from "./version.js?v=1.4.0";
+} from "./world.js?v=1.4.1";
+import { STORAGE_KEY } from "./version.js?v=1.4.1";
 
 export const MODE = {
   MENU: "menu",
@@ -510,6 +510,19 @@ export class Game {
     }
   }
 
+
+
+  _nearestResource() {
+    const p = this.player;
+    const reach = 92 * SCALE;
+    return (
+      nearestNode(this.world.trees, p.x, p.y, (t) => !t.stump, reach) ||
+      nearestNode(this.world.rocks, p.x, p.y, (r) => !r.gone, reach) ||
+      nearestNode(this.world.veins, p.x, p.y, (v) => !v.gone, reach) ||
+      this._nearPlot(reach) ||
+      null
+    );
+  }
 
   _resourceInReach() {
     const p = this.player;

@@ -126,17 +126,19 @@ export class Input {
       stick.style.top = "auto";
       // reencaminha o mesmo ponteiro ao stick
       try {
-        stick.dispatchEvent(new PointerEvent("pointerdown", {
-          bubbles: true,
-          cancelable: true,
-          pointerId: e.pointerId,
-          pointerType: e.pointerType,
-          clientX: e.clientX,
-          clientY: e.clientY,
-          buttons: 1,
-        }));
+        if (typeof PointerEvent === "function") {
+          stick.dispatchEvent(new PointerEvent("pointerdown", {
+            bubbles: true,
+            cancelable: true,
+            pointerId: e.pointerId,
+            pointerType: e.pointerType || "touch",
+            clientX: e.clientX,
+            clientY: e.clientY,
+            buttons: 1,
+          }));
+        }
       } catch (_) {
-        /* PointerEvent antigo */
+        /* ignore */
       }
     }, { passive: false });
   }
