@@ -10,7 +10,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/game.css?v=1.4.2" />
+  <link rel="stylesheet" href="css/game.css?v=202609241820" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./js/vendor/three.module.js?v=202609241820"
+    }
+  }
+  </script>
 </head>
 <body oncontextmenu="return false">
   <div id="app">
@@ -73,6 +80,7 @@
       <div class="card">
         <h1>CABANA DE GUERRA</h1>
         <p class="tagline">De dia você planta, corta madeira e fortalece a clareira. De noite, ondas de zumbis tentam derrubar a cabana. Sobreviva o máximo de ciclos que puder.</p>
+        <p id="webgl-fail" class="webgl-fail hidden" role="alert"></p>
         <p class="record">Melhor recorde: <span id="best-menu">0</span> noites</p>
         <div class="row">
           <button type="button" id="btn-start">Começar</button>
@@ -129,8 +137,8 @@
       </div>
     </div>
 
-    <div class="foot" id="ver">v1.4.2</div>
+    <div class="foot" id="ver">v1.5.0</div>
   </div>
-  <script type="module" src="js/main.js?v=1.4.2"></script>
+  <script type="module" src="js/main.js?v=202609241820"></script>
 </body>
 </html>

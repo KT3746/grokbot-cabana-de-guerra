@@ -152,6 +152,14 @@ button {
   font-weight: 600;
 }
 
+.webgl-fail {
+  margin: 0 0 14px;
+  color: #e07070;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .tagline {
   margin: 0 0 16px;
   color: var(--muted);
