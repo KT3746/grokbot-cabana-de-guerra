@@ -1,23 +1,39 @@
-import { VERSION } from "./version.js?v=1.4.2";
-import { AudioSys } from "./audio.js?v=1.4.2";
-import { Input } from "./input.js?v=1.4.2";
-import { Game } from "./game.js?v=1.4.2";
-import { Renderer } from "./render.js?v=1.4.2";
-import { bindUI } from "./ui.js?v=1.4.2";
-import { bindViewport } from "./viewport.js?v=1.4.2";
+import { VERSION } from "./version.js?v=202609241830";
+import { AudioSys } from "./audio.js?v=202609241830";
+import { Input } from "./input.js?v=202609241830";
+import { Game } from "./game.js?v=202609241830";
+import { Renderer } from "./render.js?v=202609241830";
+import { Render3D } from "./render3d.js?v=202609241830";
+import { bindUI } from "./ui.js?v=202609241830";
+import { bindViewport } from "./viewport.js?v=202609241830";
 
 const app = document.getElementById("app");
-const canvas = document.getElementById("game");
+let canvas = document.getElementById("game");
 const audio = new AudioSys();
 const input = new Input();
 const game = new Game(audio);
+
 let renderer;
+const r3d = new Render3D();
 bindViewport(app, () => { if (renderer) renderer.resize(); });
-renderer = new Renderer(canvas, game);
+
+if (r3d.init(canvas, game)) {
+  renderer = r3d;
+} else {
+  /* Canvas já com contexto WebGL não aceita 2D — troca por um canvas novo. */
+  try {
+    const fresh = canvas.cloneNode(false);
+    canvas.replaceWith(fresh);
+    canvas = fresh;
+  } catch (_) { /* segue no mesmo canvas se der */ }
+  renderer = new Renderer(canvas, game);
+  r3d.showWebglError(true);
+}
+
 const syncUI = bindUI(game, audio);
 
 document.title = `CABANA DE GUERRA v${VERSION}`;
-window.__NNC = { game, audio, input, VERSION, sync: syncUI };
+window.__NNC = { game, audio, input, VERSION, sync: syncUI, render3d: r3d.isOk() };
 
 let last = performance.now();
 function frame(now) {
@@ -25,6 +41,13 @@ function frame(now) {
   last = now;
   input.update();
   game.syncPointer(input);
+  if (typeof renderer.screenToWorld === "function") {
+    const w = renderer.screenToWorld(input.screenX, input.screenY);
+    if (w) {
+      input.worldX = w.x;
+      input.worldY = w.y;
+    }
+  }
   game.update(dt, input);
   audio.update(dt);
   renderer.draw(dt);
