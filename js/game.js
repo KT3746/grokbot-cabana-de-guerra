@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202609241825";
+} from "./data.js?v=202609241830";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202609241825";
-import { STORAGE_KEY } from "./version.js?v=202609241825";
+} from "./world.js?v=202609241830";
+import { STORAGE_KEY } from "./version.js?v=202609241830";
 
 export const MODE = {
   MENU: "menu",

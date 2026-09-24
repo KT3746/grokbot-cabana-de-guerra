@@ -819,6 +819,16 @@ button.primary,
   background: #0a0e12cc;
   border: 1px solid #2a323866;
 }
+.chip.phase-day {
+  color: #2a1c10;
+  background: #c4a060;
+  border-color: #e0c08088;
+}
+.chip.phase-night {
+  color: #eaf2ff;
+  background: #2b4c7e;
+  border-color: #6a8ab888;
+}
 .bar {
   background: #00000099;
 }
