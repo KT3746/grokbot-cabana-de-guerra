@@ -4,9 +4,9 @@
  * Se o WebGL falhar, o main.js cai no canvas 2D.
  */
 import * as THREE from "three";
-import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202609241820";
-import { T } from "./world.js?v=202609241820";
-import { MODE } from "./game.js?v=202609241820";
+import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202609241825";
+import { T } from "./world.js?v=202609241825";
+import { MODE } from "./game.js?v=202609241825";
 
 const DAY_FOG = 0x87a090;
 const DUSK_FOG = 0x4a2818;
@@ -89,7 +89,7 @@ export class Render3D {
     try {
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(DAY_FOG);
-      scene.fog = new THREE.FogExp2(DAY_FOG, this.lowFx ? 0.042 : 0.032);
+      scene.fog = new THREE.FogExp2(DAY_FOG, this.lowFx ? 0.018 : 0.012);
 
       const camera = new THREE.PerspectiveCamera(46, 1, 0.12, 90);
 
@@ -109,18 +109,18 @@ export class Render3D {
       this.camera = camera;
       this.renderer = renderer;
 
-      this.ambient = new THREE.AmbientLight(0xc8d4c0, 0.32);
+      this.ambient = new THREE.AmbientLight(0xd8e4d4, 0.48);
       scene.add(this.ambient);
-      this.hemi = new THREE.HemisphereLight(0xc8e0f0, 0x3a2a18, 0.7);
+      this.hemi = new THREE.HemisphereLight(0xd0e8f8, 0x4a6a38, 0.95);
       scene.add(this.hemi);
-      this.sun = new THREE.DirectionalLight(0xfff0d0, 1.15);
-      this.sun.position.set(18, 28, 10);
+      this.sun = new THREE.DirectionalLight(0xfff2d0, 1.35);
+      this.sun.position.set(14, 22, 8);
       scene.add(this.sun);
       scene.add(this.sun.target);
 
-      this.playerGlow = new THREE.PointLight(0xffe0a0, 0.2, 7, 2);
+      this.playerGlow = new THREE.PointLight(0xffe0a0, 0.35, 9, 1.6);
       scene.add(this.playerGlow);
-      this.cabinGlow = new THREE.PointLight(0xffc060, 0, 9, 1.8);
+      this.cabinGlow = new THREE.PointLight(0xffc060, 0, 11, 1.5);
       scene.add(this.cabinGlow);
 
       this.torchLights = [];
@@ -160,9 +160,9 @@ export class Render3D {
       tile: new THREE.BoxGeometry(1, 0.1, 1),
       water: new THREE.BoxGeometry(1, 0.08, 1),
       sphere: new THREE.SphereGeometry(0.5, 7, 6),
-      cone: new THREE.ConeGeometry(0.55, 1.2, 6),
-      coneSm: new THREE.ConeGeometry(0.38, 0.7, 6),
-      cyl: new THREE.CylinderGeometry(0.18, 0.22, 1, 6),
+      cone: new THREE.ConeGeometry(0.72, 1.55, 6),
+      coneSm: new THREE.ConeGeometry(0.5, 1.05, 6),
+      cyl: new THREE.CylinderGeometry(0.16, 0.22, 1.4, 6),
       stump: new THREE.CylinderGeometry(0.28, 0.32, 0.22, 7),
       ico: new THREE.IcosahedronGeometry(0.55, 0),
       cap: new THREE.CapsuleGeometry(0.22, 0.38, 3, 6),
@@ -172,25 +172,23 @@ export class Render3D {
       prism: new THREE.ConeGeometry(0.72, 0.55, 4),
     };
     this.mat = {
-      grass: new THREE.MeshStandardMaterial({ color: 0x3a5a34, roughness: 0.95, metalness: 0 }),
-      dirt: new THREE.MeshStandardMaterial({ color: 0x3d2a1c, roughness: 0.96 }),
-      soil: new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.97 }),
-      water: new THREE.MeshStandardMaterial({
-        color: 0x1a3a48, roughness: 0.35, metalness: 0.08, emissive: 0x0a2030, emissiveIntensity: 0.12,
-      }),
-      floor: new THREE.MeshStandardMaterial({ color: 0x4a3424, roughness: 0.9 }),
-      wall: new THREE.MeshStandardMaterial({ color: 0x241810, roughness: 0.92 }),
-      wood: new THREE.MeshStandardMaterial({ color: 0x3d2a1c, roughness: 0.88 }),
-      woodHi: new THREE.MeshStandardMaterial({ color: 0x5a3a24, roughness: 0.86 }),
-      roof: new THREE.MeshStandardMaterial({ color: 0x3a1a16, roughness: 0.9 }),
-      roofDark: new THREE.MeshStandardMaterial({ color: 0x1a1010, roughness: 0.92 }),
-      bark: new THREE.MeshStandardMaterial({ color: 0x3a2818, roughness: 0.95 }),
-      leaf: new THREE.MeshStandardMaterial({ color: 0x1c3a1c, roughness: 0.9 }),
-      leafHi: new THREE.MeshStandardMaterial({ color: 0x245024, roughness: 0.88 }),
-      rock: new THREE.MeshStandardMaterial({ color: 0x5a6068, roughness: 0.92, metalness: 0.08 }),
-      rockHi: new THREE.MeshStandardMaterial({ color: 0x7a828c, roughness: 0.85, metalness: 0.12 }),
-      iron: new THREE.MeshStandardMaterial({
-        color: 0xa8b8c4, roughness: 0.4, metalness: 0.55, emissive: 0x607080, emissiveIntensity: 0.15,
+      grass: new THREE.MeshLambertMaterial({ color: 0x4a7a3c }),
+      dirt: new THREE.MeshLambertMaterial({ color: 0x5a3c24 }),
+      soil: new THREE.MeshLambertMaterial({ color: 0x3a2418 }),
+      water: new THREE.MeshLambertMaterial({ color: 0x2a5a68, emissive: 0x0a3040, emissiveIntensity: 0.18 }),
+      floor: new THREE.MeshLambertMaterial({ color: 0x5a4030 }),
+      wall: new THREE.MeshLambertMaterial({ color: 0x2a1c12 }),
+      wood: new THREE.MeshLambertMaterial({ color: 0x6a442c }),
+      woodHi: new THREE.MeshLambertMaterial({ color: 0x8a5a38 }),
+      roof: new THREE.MeshLambertMaterial({ color: 0x6a2a22 }),
+      roofDark: new THREE.MeshLambertMaterial({ color: 0x3a1814 }),
+      bark: new THREE.MeshLambertMaterial({ color: 0x5a3a22 }),
+      leaf: new THREE.MeshLambertMaterial({ color: 0x3d8a3a }),
+      leafHi: new THREE.MeshLambertMaterial({ color: 0x5aaa48 }),
+      rock: new THREE.MeshLambertMaterial({ color: 0x7a828c }),
+      rockHi: new THREE.MeshLambertMaterial({ color: 0xa0a8b0 }),
+      iron: new THREE.MeshLambertMaterial({
+        color: 0xc0d0dc, emissive: 0x607080, emissiveIntensity: 0.35,
       }),
       crop: new THREE.MeshStandardMaterial({ color: 0x3d5c2e, roughness: 0.9 }),
       fruit: new THREE.MeshStandardMaterial({ color: 0x8b3a2a, roughness: 0.7 }),
@@ -206,11 +204,11 @@ export class Render3D {
       playerPants: new THREE.MeshStandardMaterial({ color: 0x1e1a14, roughness: 0.85 }),
       weapon: new THREE.MeshStandardMaterial({ color: 0x6a5a48, roughness: 0.7 }),
       blade: new THREE.MeshStandardMaterial({ color: 0x8a9098, roughness: 0.4, metalness: 0.45 }),
-      zBody: new THREE.MeshStandardMaterial({ color: 0x3e4838, roughness: 0.85 }),
-      zRun: new THREE.MeshStandardMaterial({ color: 0x4a4038, roughness: 0.85 }),
-      zBrute: new THREE.MeshStandardMaterial({ color: 0x3a4a30, roughness: 0.85 }),
-      zHead: new THREE.MeshStandardMaterial({ color: 0x5a6050, roughness: 0.8 }),
-      eye: new THREE.MeshBasicMaterial({ color: 0xff4028 }),
+      zBody: new THREE.MeshLambertMaterial({ color: 0x5a6a48, emissive: 0x1a2810, emissiveIntensity: 0.22 }),
+      zRun: new THREE.MeshLambertMaterial({ color: 0x6a5a48, emissive: 0x281808, emissiveIntensity: 0.22 }),
+      zBrute: new THREE.MeshLambertMaterial({ color: 0x4a5a38, emissive: 0x142010, emissiveIntensity: 0.22 }),
+      zHead: new THREE.MeshLambertMaterial({ color: 0x6a7060, emissive: 0x202418, emissiveIntensity: 0.18 }),
+      eye: new THREE.MeshBasicMaterial({ color: 0xff5030 }),
       eyeHot: new THREE.MeshBasicMaterial({ color: 0xffe080 }),
       arrow: new THREE.MeshBasicMaterial({ color: 0x5c4030 }),
       ghostOk: new THREE.MeshBasicMaterial({ color: 0xc4a060, transparent: true, opacity: 0.35, depthWrite: false }),
@@ -289,12 +287,14 @@ export class Render3D {
     }), 0, 0.03, 0, 0.8, 0.08, 0.8);
     g.add(shadow);
     const bodyMat = this.mat.zBody.clone();
+    bodyMat.emissive = new THREE.Color(0x1a2810);
+    bodyMat.emissiveIntensity = 0.25;
     const body = this._mesh(this.geo.capZ, bodyMat, 0, 0.55, 0, 1, 1, 1);
     g.add(body);
     const head = this._mesh(this.geo.box, this.mat.zHead, 0, 1.02, 0, 0.42, 0.34, 0.38);
     g.add(head);
-    const eyeL = this._mesh(this.geo.box, this.mat.eye, -0.1, 1.05, 0.2, 0.1, 0.08, 0.06);
-    const eyeR = this._mesh(this.geo.box, this.mat.eye, 0.1, 1.05, 0.2, 0.1, 0.08, 0.06);
+    const eyeL = this._mesh(this.geo.box, this.mat.eye, -0.1, 1.05, 0.2, 0.14, 0.12, 0.08);
+    const eyeR = this._mesh(this.geo.box, this.mat.eye, 0.1, 1.05, 0.2, 0.14, 0.12, 0.08);
     g.add(eyeL, eyeR);
     const hpBack = this._mesh(this.geo.box, this.mat.hpBack, 0, 1.38, 0, 0.7, 0.06, 0.06);
     const hpFill = this._mesh(this.geo.box, this.mat.hpOk, 0, 1.38, 0.01, 0.68, 0.05, 0.05);
@@ -460,11 +460,11 @@ export class Render3D {
       this._dummy.scale.set(1, 1, 1);
       this._dummy.updateMatrix();
       land.setMatrixAt(i, this._dummy.matrix);
-      if (tile === T.DIRT) this._color.setRGB(0.24 + n * 0.04, 0.16, 0.1);
-      else if (tile === T.SOIL) this._color.setRGB(0.16, 0.1, 0.06);
-      else if (tile === T.FLOOR) this._color.setRGB(0.29, 0.2, 0.14);
-      else if (tile === T.WALL || tile === T.DOOR) this._color.setRGB(0.12, 0.08, 0.05);
-      else this._color.setRGB(0.16 + n * 0.05, 0.28 + n * 0.1, 0.14 + n * 0.04);
+      if (tile === T.DIRT) this._color.setRGB(0.95, 0.72, 0.5);
+      else if (tile === T.SOIL) this._color.setRGB(0.55, 0.38, 0.28);
+      else if (tile === T.FLOOR) this._color.setRGB(0.95, 0.78, 0.58);
+      else if (tile === T.WALL || tile === T.DOOR) this._color.setRGB(0.45, 0.32, 0.22);
+      else this._color.setRGB(0.72 + n * 0.22, 0.88 + n * 0.1, 0.55 + n * 0.12);
       land.setColorAt(i, this._color);
     }
     land.instanceMatrix.needsUpdate = true;
@@ -501,10 +501,10 @@ export class Render3D {
     const g = new THREE.Group();
     g.position.set(this._wx(t.x), 0, this._wz(t.y));
     const n = hash2(t.tx, t.ty);
-    const trunk = this._mesh(this.geo.cyl, this.mat.bark, 0, 0.55, 0, 1, 1.1, 1);
-    const stump = this._mesh(this.geo.stump, this.mat.bark, 0, 0.12, 0, 1, 1, 1);
-    const leaf1 = this._mesh(this.geo.cone, this.mat.leaf, 0, 1.35, 0, 1.15 + n * 0.2, 1.1, 1.15 + n * 0.2);
-    const leaf2 = this._mesh(this.geo.coneSm, this.mat.leafHi, 0.15, 1.85, -0.1, 1.1, 1, 1.1);
+    const trunk = this._mesh(this.geo.cyl, this.mat.bark, 0, 0.85, 0, 1.15, 1.2, 1.15);
+    const stump = this._mesh(this.geo.stump, this.mat.bark, 0, 0.12, 0, 1.15, 1, 1.15);
+    const leaf1 = this._mesh(this.geo.cone, this.mat.leaf, 0, 2.15, 0, 1.25 + n * 0.25, 1.25, 1.25 + n * 0.25);
+    const leaf2 = this._mesh(this.geo.coneSm, this.mat.leafHi, 0.18, 2.85, -0.12, 1.2, 1.15, 1.2);
     g.add(trunk, stump, leaf1, leaf2);
     g.userData = { trunk, stump, leaf1, leaf2, src: t };
     this.worldRoot.add(g);
@@ -545,24 +545,24 @@ export class Render3D {
     const cz = c.ty + 2.5;
     g.position.set(cx, 0, cz);
 
-    g.add(this._mesh(this.geo.box, this.mat.wood, 0, 0.95, 0, 4.6, 1.7, 4.2));
-    g.add(this._mesh(this.geo.box, this.mat.woodHi, 0, 0.95, 0, 4.35, 1.55, 3.95));
+    g.add(this._mesh(this.geo.box, this.mat.wood, 0, 1.05, 0, 4.8, 1.9, 4.4));
+    g.add(this._mesh(this.geo.box, this.mat.woodHi, 0, 1.05, 0, 4.5, 1.7, 4.1));
 
-    const roof = this._mesh(this.geo.prism, this.mat.roof, 0, 2.05, 0, 4.4, 1.35, 4.6);
+    const roof = this._mesh(this.geo.prism, this.mat.roof, 0, 2.25, 0, 4.7, 1.5, 4.9);
     roof.rotation.y = Math.PI / 4;
     g.add(roof);
-    const roofCap = this._mesh(this.geo.prism, this.mat.roofDark, 0, 2.18, 0, 4.55, 0.35, 4.75);
+    const roofCap = this._mesh(this.geo.prism, this.mat.roofDark, 0, 2.4, 0, 4.85, 0.4, 5.05);
     roofCap.rotation.y = Math.PI / 4;
     g.add(roofCap);
 
-    g.add(this._mesh(this.geo.box, this.mat.door, 0, 0.55, 2.08, 0.7, 1.05, 0.12));
-    const winL = this._mesh(this.geo.box, this.mat.winGlass, -1.35, 1.15, 2.08, 0.7, 0.5, 0.08);
-    const winR = this._mesh(this.geo.box, this.mat.winGlass, 1.35, 1.15, 2.08, 0.7, 0.5, 0.08);
+    g.add(this._mesh(this.geo.box, this.mat.door, 0, 0.62, 2.18, 0.75, 1.15, 0.14));
+    const winL = this._mesh(this.geo.box, this.mat.winGlass, -1.4, 1.28, 2.18, 0.72, 0.52, 0.1);
+    const winR = this._mesh(this.geo.box, this.mat.winGlass, 1.4, 1.28, 2.18, 0.72, 0.52, 0.1);
     g.add(winL, winR);
-    g.add(this._mesh(this.geo.box, this.mat.wood, 1.55, 2.35, -0.4, 0.28, 0.7, 0.28));
+    g.add(this._mesh(this.geo.box, this.mat.wood, 1.6, 2.55, -0.4, 0.3, 0.75, 0.3));
 
-    const hpBack = this._mesh(this.geo.box, this.mat.hpBack, 0, 2.72, 0, 2.4, 0.08, 0.08);
-    const hpFill = this._mesh(this.geo.box, this.mat.cabinHp, 0, 2.72, 0.02, 2.32, 0.06, 0.06);
+    const hpBack = this._mesh(this.geo.box, this.mat.hpBack, 0, 2.95, 0, 2.4, 0.08, 0.08);
+    const hpFill = this._mesh(this.geo.box, this.mat.cabinHp, 0, 2.95, 0.02, 2.32, 0.06, 0.06);
     g.add(hpBack, hpFill);
 
     g.userData = { winL, winR, hpFill, hpBack };
@@ -626,29 +626,30 @@ export class Render3D {
     const day = 1 - night;
     const dusk = Math.sin(night * Math.PI) * (night > 0.02 && night < 0.98 ? 1 : 0);
 
-    this.ambient.color.setRGB(lerp(0.78, 0.18, night), lerp(0.83, 0.22, night), lerp(0.75, 0.32, night));
-    this.ambient.intensity = 0.3 * day + 0.08 * night + 0.06 * dusk;
-    this.hemi.color.setRGB(lerp(0.78, 0.12, night), lerp(0.88, 0.18, night), lerp(0.94, 0.32, night));
-    this.hemi.groundColor.setRGB(lerp(0.23, 0.05, night), lerp(0.16, 0.04, night), lerp(0.09, 0.06, night));
-    this.hemi.intensity = 0.72 * day + 0.14 * night;
-    this.sun.color.setRGB(lerp(1, 0.35, night), lerp(0.94, 0.42, night), lerp(0.82, 0.7, night));
-    this.sun.intensity = 1.18 * day + 0.05 * night + 0.25 * dusk;
-    this.sun.position.set(18 - night * 8, 28 - night * 16, 10);
+    this.ambient.color.setRGB(lerp(0.85, 0.28, night), lerp(0.9, 0.34, night), lerp(0.82, 0.48, night));
+    this.ambient.intensity = 0.5 * day + 0.22 * night + 0.08 * dusk;
+    this.hemi.color.setRGB(lerp(0.82, 0.22, night), lerp(0.9, 0.32, night), lerp(0.97, 0.52, night));
+    this.hemi.groundColor.setRGB(lerp(0.32, 0.08, night), lerp(0.42, 0.1, night), lerp(0.22, 0.12, night));
+    this.hemi.intensity = 0.95 * day + 0.32 * night;
+    this.sun.color.setRGB(lerp(1, 0.4, night), lerp(0.95, 0.5, night), lerp(0.82, 0.72, night));
+    this.sun.intensity = 1.35 * day + 0.12 * night + 0.35 * dusk;
+    this.sun.position.set(14 - night * 6, 22 - night * 8, 8);
 
     this._fogA.setHex(DAY_FOG);
     this._fogB.setHex(night > 0.55 ? NIGHT_FOG : DUSK_FOG);
     this.scene.fog.color.copy(this._fogA).lerp(this._fogB, Math.max(night, dusk * 0.65));
     this.scene.background.copy(this.scene.fog.color);
-    this.scene.fog.density = (this.lowFx ? 0.038 : 0.028) + night * 0.018;
+    this.scene.fog.density = (this.lowFx ? 0.016 : 0.011) + night * 0.008;
 
     const p = g.player;
-    this.playerGlow.position.set(this._wx(p.x), 0.7, this._wz(p.y));
-    this.playerGlow.intensity = 0.15 + night * 1.15;
-    this.playerGlow.distance = 4.5 + night * 3.5;
+    this.playerGlow.position.set(this._wx(p.x), 0.85, this._wz(p.y));
+    this.playerGlow.intensity = 0.25 + night * 2.1;
+    this.playerGlow.distance = 5.5 + night * 4.5;
     this.playerGlow.color.setHex(night > 0.4 ? 0xffd080 : 0xe8f0e0);
     this.playerLantern.visible = night > 0.35;
-    this.cabinGlow.intensity = night * 1.35;
-    this.mat.winGlass.emissiveIntensity = night * 0.95;
+    this.cabinGlow.intensity = night * 2.4;
+    this.cabinGlow.distance = 10;
+    this.mat.winGlass.emissiveIntensity = night * 1.4;
     this.mat.winGlass.color.setHex(night > 0.3 ? 0xd4a24a : 0x1a1410);
 
     const torches = g.world.torches || [];
@@ -774,6 +775,7 @@ export class Render3D {
     const p = g.player;
     const bob = Math.sin((p.walk || 0) * 2) * 0.04;
     this.playerRoot.position.set(this._wx(p.x), bob, this._wz(p.y));
+    this.playerRoot.scale.setScalar(1.28);
     const ang = p.aim != null ? p.aim : p.facing;
     this.playerRoot.rotation.y = this._faceY(ang || 0);
     this.playerRoot.visible = true;
@@ -810,7 +812,8 @@ export class Render3D {
       z3.root.rotation.y = this._faceY(z.facing != null ? z.facing : face);
       const sc = brute ? 1.35 : run ? 0.82 : 1;
       z3.root.scale.setScalar(sc);
-      z3.bodyMat.color.setHex(brute ? 0x3a4a30 : run ? 0x4a4038 : 0x3e4838);
+      z3.bodyMat.color.setHex(brute ? 0x4a5a38 : run ? 0x6a5a48 : 0x5a6a48);
+      z3.bodyMat.emissiveIntensity = 0.2 + (g.nightLight || 0) * 0.45 + (z.hurt > 0 ? 0.4 : 0);
       const wind = Math.min(1, z.windup || 0) / 0.32;
       const eyeMat = wind > 0.2 ? this.mat.eyeHot : this.mat.eye;
       z3.eyeL.material = eyeMat;
@@ -827,7 +830,7 @@ export class Render3D {
         z3.hpFill.position.x = (ratio - 1) * 0.34;
         z3.hpFill.material = ratio > 0.4 ? this.mat.hpOk : this.mat.hpBad;
       }
-      z3.bodyMat.emissive.setHex(z.hurt > 0 ? 0x442222 : 0x000000);
+      z3.bodyMat.emissive.setHex(z.hurt > 0 ? 0x662222 : 0x1a2810);
     }
 
     const arrows = g.arrows || [];
@@ -858,10 +861,10 @@ export class Render3D {
     const n = g.focusNode;
     if (n && n.x != null && g.mode === MODE.PLAY) {
       this.focusRing.visible = true;
-      this.focusRing.position.set(this._wx(n.x), 0.14, this._wz(n.y));
-      const pulse = 0.95 + Math.sin(this.t * 6) * 0.12;
+      this.focusRing.position.set(this._wx(n.x), 0.18, this._wz(n.y));
+      const pulse = 1.15 + Math.sin(this.t * 6) * 0.18;
       this.focusRing.scale.setScalar(pulse);
-      this.focusRing.material.opacity = 0.45 + Math.sin(this.t * 6) * 0.2;
+      this.focusRing.material.opacity = 0.7 + Math.sin(this.t * 6) * 0.25;
     } else {
       this.focusRing.visible = false;
     }
@@ -922,18 +925,14 @@ export class Render3D {
 
     const flash = g.flash || 0;
     const vig = g.vignette || 0;
-    const menu = g.mode === MODE.MENU;
-    if (flash > 0.01 || vig > 0.04 || menu) {
+    if (flash > 0.01 || vig > 0.04) {
       this.flashMesh.visible = true;
       if (flash > 0.01) {
         this.flashMesh.material.color.setHex(0x5a0808);
         this.flashMesh.material.opacity = flash * 0.45;
-      } else if (vig > 0.04) {
+      } else {
         this.flashMesh.material.color.setHex(0x280404);
         this.flashMesh.material.opacity = Math.min(0.42, vig * 0.55);
-      } else {
-        this.flashMesh.material.color.setHex(0x04060c);
-        this.flashMesh.material.opacity = 0.28;
       }
     } else {
       this.flashMesh.visible = false;
@@ -948,7 +947,8 @@ export class Render3D {
     let tz = this._wz(p.y);
     if (g.mode === MODE.MENU) {
       tx = this._wx(c.x);
-      tz = this._wz(c.y + 40);
+      tz = this._wz(c.y + 36);
+      this._look.set(tx, 0.35, tz);
     }
     const lerpAmt = Math.min(1, (g.mode === MODE.MENU ? 2 : 10) * dt);
     this._look.x = lerp(this._look.x, tx, lerpAmt);
@@ -956,10 +956,10 @@ export class Render3D {
     this._look.z = lerp(this._look.z, tz, lerpAmt);
 
     const aspect = (g.viewW || 16) / Math.max(1, g.viewH || 9);
-    const span = aspect < 0.8 ? 15.5 : 17.5;
+    const span = aspect < 0.8 ? 12.2 : 13.6;
     const fov = (this.camera.fov * Math.PI) / 180;
-    const camH = (span * 0.52) / Math.tan(fov / 2);
-    const back = camH * 0.48;
+    const camH = (span * 0.5) / Math.tan(fov / 2);
+    const back = camH * 0.42;
 
     let ox = 0;
     let oy = 0;

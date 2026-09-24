@@ -67,7 +67,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro, com Three.
 - `css/game.css` — interface
 - `js/` — lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
 - `js/vendor/three.module.js` — Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
-- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202609241820`) para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202609241825`) para o navegador não ficar com versão antiga após uma atualização
 - `js/vendor/three.module.js` — Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
 - Se o WebGL falhar, o jogo continua no canvas 2D e mostra um aviso em português
 

@@ -115,8 +115,8 @@ button {
   pointer-events: auto;
   touch-action: manipulation;
   background:
-    radial-gradient(ellipse at 50% 120%, #3a2418cc, transparent 55%),
-    linear-gradient(180deg, #0b1220dd 0%, #1a120ccc 100%);
+    radial-gradient(ellipse at 50% 120%, #3a241866, transparent 55%),
+    linear-gradient(180deg, #0b1220aa 0%, #1a120c88 100%);
   z-index: var(--z-overlay);
   transform: none;
 }

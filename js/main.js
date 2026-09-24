@@ -1,11 +1,11 @@
-import { VERSION } from "./version.js?v=202609241820";
-import { AudioSys } from "./audio.js?v=202609241820";
-import { Input } from "./input.js?v=202609241820";
-import { Game } from "./game.js?v=202609241820";
-import { Renderer } from "./render.js?v=202609241820";
-import { Render3D } from "./render3d.js?v=202609241820";
-import { bindUI } from "./ui.js?v=202609241820";
-import { bindViewport } from "./viewport.js?v=202609241820";
+import { VERSION } from "./version.js?v=202609241825";
+import { AudioSys } from "./audio.js?v=202609241825";
+import { Input } from "./input.js?v=202609241825";
+import { Game } from "./game.js?v=202609241825";
+import { Renderer } from "./render.js?v=202609241825";
+import { Render3D } from "./render3d.js?v=202609241825";
+import { bindUI } from "./ui.js?v=202609241825";
+import { bindViewport } from "./viewport.js?v=202609241825";
 
 const app = document.getElementById("app");
 let canvas = document.getElementById("game");
