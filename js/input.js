@@ -49,7 +49,14 @@ export class Input {
     window.addEventListener("pointermove", onPtr);
     window.addEventListener("pointerdown", (e) => {
       onPtr(e);
-      if (e.target && e.target.id === "game") {
+      const t = e.target;
+      if (!t) return;
+      /* Canvas usa pointer-events:none — toque cai em #app; UI fica de fora. */
+      const ui = typeof t.closest === "function" && t.closest(
+        "button, a, input, textarea, select, .chip, .res, .slot, .craft, .overlay, .card, .touch-actions, .touch-extra, #stick, #stick-zone, .hotbar, .hud-actions, .recipe"
+      );
+      if (ui) return;
+      if (t.id === "game" || t.id === "app" || t === document.body || t === document.documentElement) {
         this.pointerDown = true;
         this.worldClick = true;
         // clique so mira / marca o chao; coleta = E ou botao Agir
@@ -103,28 +110,33 @@ export class Input {
   }
 
 
-  /** Joystick flutuante: toque na metade esquerda do jogo reposiciona o stick sob o dedo. */
+  /** Joystick flutuante: toque na metade esquerda (fora da UI) reposiciona o stick sob o dedo.
+   * Ouve no window — a camada .touch tem pointer-events:none pra não cobrir o HUD. */
   _bindFloatingStick() {
-    const layer = document.getElementById("touch");
     const stick = document.getElementById("stick");
-    if (!layer || !stick) return;
-    layer.addEventListener("pointerdown", (e) => {
-      if (e.target.closest("button")) return;
-      if (e.target.closest("#stick")) return;
+    if (!stick) return;
+    window.addEventListener("pointerdown", (e) => {
+      const layer = document.getElementById("touch");
+      if (!layer || layer.classList.contains("hidden")) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      const t = e.target;
+      if (!t || typeof t.closest !== "function") return;
+      if (t.closest("button, #stick, .craft, .overlay, .card, .hotbar, .hud-actions, .hud-top, a, input")) return;
       const rect = layer.getBoundingClientRect();
       const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return;
       if (x > rect.width * 0.45) return; // só metade esquerda
+      if (y < rect.height * 0.18) return; // evita HUD do topo
       if (e.cancelable) e.preventDefault();
       this.touchEnabled = true;
       const half = stick.offsetWidth / 2;
       const left = Math.max(8, Math.min(rect.width * 0.45 - stick.offsetWidth - 8, x - half));
-      const bottomFromTop = e.clientY - rect.top;
-      const bottom = Math.max(8, rect.height - bottomFromTop - half);
+      const bottom = Math.max(8, rect.height - y - half);
       stick.style.left = left + "px";
       stick.style.bottom = bottom + "px";
       stick.style.right = "auto";
       stick.style.top = "auto";
-      // reencaminha o mesmo ponteiro ao stick
       try {
         if (typeof PointerEvent === "function") {
           stick.dispatchEvent(new PointerEvent("pointerdown", {
@@ -140,7 +152,7 @@ export class Input {
       } catch (_) {
         /* ignore */
       }
-    }, { passive: false });
+    }, { passive: false, capture: true });
   }
 
   _bindTouch() {

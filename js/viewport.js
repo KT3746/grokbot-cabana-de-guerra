@@ -45,7 +45,12 @@ export function bindViewport(app, onChange) {
   };
 
   window.addEventListener("resize", apply);
-  window.addEventListener("orientationchange", apply);
+  window.addEventListener("orientationchange", () => {
+    apply();
+    /* iOS demora a estabilizar visualViewport após girar */
+    setTimeout(apply, 120);
+    setTimeout(apply, 320);
+  });
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", apply);
     window.visualViewport.addEventListener("scroll", apply);

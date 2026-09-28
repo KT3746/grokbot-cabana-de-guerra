@@ -1,11 +1,11 @@
-import { VERSION } from "./version.js?v=202609241830";
-import { AudioSys } from "./audio.js?v=202609241830";
-import { Input } from "./input.js?v=202609241830";
-import { Game } from "./game.js?v=202609241830";
-import { Renderer } from "./render.js?v=202609241830";
-import { Render3D } from "./render3d.js?v=202609241830";
-import { bindUI } from "./ui.js?v=202609241830";
-import { bindViewport } from "./viewport.js?v=202609241830";
+import { VERSION } from "./version.js?v=202609280152";
+import { AudioSys } from "./audio.js?v=202609280152";
+import { Input } from "./input.js?v=202609280152";
+import { Game, MODE } from "./game.js?v=202609280152";
+import { Renderer } from "./render.js?v=202609280152";
+import { Render3D } from "./render3d.js?v=202609280152";
+import { bindUI } from "./ui.js?v=202609280152";
+import { bindViewport } from "./viewport.js?v=202609280152";
 
 const app = document.getElementById("app");
 let canvas = document.getElementById("game");
@@ -35,8 +35,28 @@ const syncUI = bindUI(game, audio);
 document.title = `CABANA DE GUERRA v${VERSION}`;
 window.__NNC = { game, audio, input, VERSION, sync: syncUI, render3d: r3d.isOk() };
 
+/* Aba/app oculta mid-jogo: pausa pra não continuar "cego" (zumbis, timer). */
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    /* Continuar na pausa: áudio só volta com setMode(PLAY) / Continuar. */
+    return;
+  }
+  try { audio.suspend(); } catch (_) { /* ok */ }
+  if (game.mode === MODE.PLAY && !game.showTutorial) {
+    if (game.showCraft) game.showCraft = false;
+    game.setMode(MODE.PAUSE);
+    try { syncUI(); } catch (_) { /* ok */ }
+  }
+});
+
 let last = performance.now();
 function frame(now) {
+  /* Aba oculta: não simula nem renderiza (dt efetivo = 0). */
+  if (document.hidden) {
+    last = now;
+    requestAnimationFrame(frame);
+    return;
+  }
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   input.update();

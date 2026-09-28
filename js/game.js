@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202609241830";
+} from "./data.js?v=202609280152";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202609241830";
-import { STORAGE_KEY } from "./version.js?v=202609241830";
+} from "./world.js?v=202609280152";
+import { STORAGE_KEY } from "./version.js?v=202609280152";
 
 export const MODE = {
   MENU: "menu",
@@ -137,6 +137,10 @@ export class Game {
     this.uiLock = 0.4;
     try {
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    } catch (_) { /* ok */ }
+    try {
+      if (mode === MODE.PAUSE || mode === MODE.MENU || mode === MODE.OVER) this.audio.suspend();
+      else if (mode === MODE.PLAY) this.audio.resume();
     } catch (_) { /* ok */ }
   }
 

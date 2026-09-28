@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202609241830";
-import { T } from "./world.js?v=202609241830";
-import { MODE } from "./game.js?v=202609241830";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202609280152";
+import { T } from "./world.js?v=202609280152";
+import { MODE } from "./game.js?v=202609280152";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -19,7 +19,10 @@ export class Renderer {
   }
 
   resize() {
-    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    /* Celular: cap 1.25 pra poupar fill-rate; desktop até 2. */
+    const coarse = window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(max-width: 900px)").matches;
+    const dprCap = coarse ? 1.25 : 2;
+    const dpr = Math.min(dprCap, window.devicePixelRatio || 1);
     const app = document.getElementById("app");
     const w = (app && app.clientWidth) || this.canvas.clientWidth || window.innerWidth;
     const h = (app && app.clientHeight) || this.canvas.clientHeight || window.innerHeight;
