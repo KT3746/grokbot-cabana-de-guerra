@@ -4,9 +4,9 @@
  * Se o WebGL falhar, o main.js cai no canvas 2D.
  */
 import * as THREE from "three";
-import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202609241830";
-import { T } from "./world.js?v=202609241830";
-import { MODE } from "./game.js?v=202609241830";
+import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202609280152";
+import { T } from "./world.js?v=202609280152";
+import { MODE } from "./game.js?v=202609280152";
 
 const DAY_FOG = 0x87a090;
 const DUSK_FOG = 0x4a2818;
@@ -573,6 +573,7 @@ export class Render3D {
 
   resize() {
     if (!this.ok || !this.renderer || !this.camera) return;
+    this._refreshFx();
     const app = document.getElementById("app");
     const w = (app && app.clientWidth) || this.canvas.clientWidth || window.innerWidth;
     const h = (app && app.clientHeight) || this.canvas.clientHeight || window.innerHeight;
@@ -580,6 +581,8 @@ export class Render3D {
     this.game.viewH = h;
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
+    const dprCap = (this._coarse || this._narrow) ? 1 : 1.5;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     this.renderer.setSize(w, h, false);
   }
 

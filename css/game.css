@@ -101,6 +101,9 @@ button {
   cursor: crosshair;
   background: #0c1210;
   image-rendering: auto;
+  /* Não come toque: mira/marca vêm do listener em window; stick flutuante precisa passar. */
+  pointer-events: none;
+  touch-action: none;
 }
 
 .overlay {
@@ -634,9 +637,9 @@ button:disabled {
   }
 
   .hud-actions button {
-    min-height: 32px;
-    padding: 4px 8px;
-    font-size: 12px;
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: 13px;
   }
 
   .hud-actions #btn-noite,
@@ -746,32 +749,33 @@ button:disabled {
   .touch-extra {
     left: 50%;
     right: auto;
-    bottom: calc(18px + env(safe-area-inset-bottom) + 64px);
+    bottom: calc(18px + env(safe-area-inset-bottom) + 78px);
     transform: translateX(-50%);
     flex-direction: row;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   .touch-extra button {
-    min-width: 52px;
-    height: 32px;
-    font-size: 11px;
-    padding: 0 8px;
-    border-radius: 8px;
+    min-width: 56px;
+    min-height: 44px;
+    height: 44px;
+    font-size: 12px;
+    padding: 0 10px;
+    border-radius: 10px;
   }
 
   .banner {
     white-space: normal;
     width: min(92%, 420px);
     top: auto;
-    bottom: calc(8px + env(safe-area-inset-bottom) + 108px);
+    bottom: calc(8px + env(safe-area-inset-bottom) + 120px);
     font-size: 16px;
     padding: 8px 12px;
   }
 
   #toasts {
-    bottom: calc(8px + env(safe-area-inset-bottom) + 108px);
+    bottom: calc(8px + env(safe-area-inset-bottom) + 120px);
     left: 8px;
     right: 130px;
   }
@@ -845,4 +849,129 @@ button.primary,
 }
 .stick.is-active {
   box-shadow: 0 0 0 3px #c4a06088;
+}
+
+
+/* Mobile polish: HUD legível em paisagem baixa (~390px de altura) */
+@media (orientation: landscape) and (max-height: 430px) {
+  .hud-top {
+    padding: 2px 6px;
+  }
+  .chip {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+  .chip .bar {
+    width: 28px;
+    height: 5px;
+  }
+  .resbar {
+    margin-top: 2px;
+  }
+  .res {
+    padding: 2px 3px;
+    font-size: 9px;
+  }
+  .hotbar {
+    padding: 0 4px 2px;
+  }
+  .slot {
+    width: 44px;
+    min-height: 44px;
+    font-size: 8px;
+  }
+  .stick {
+    width: 108px;
+    height: 108px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  #stick-knob {
+    width: 48px;
+    height: 48px;
+  }
+  .touch-actions {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    grid-template-columns: 64px 64px;
+    gap: 10px;
+  }
+  .touch-actions button {
+    width: 64px;
+    height: 64px;
+    font-size: 12px;
+  }
+  .touch-actions #btn-atk {
+    width: 72px;
+    height: 72px;
+  }
+  .touch-extra {
+    bottom: calc(8px + env(safe-area-inset-bottom) + 56px);
+  }
+  .touch-extra button {
+    min-height: 40px;
+    height: 40px;
+    font-size: 11px;
+  }
+  .banner {
+    bottom: calc(6px + env(safe-area-inset-bottom) + 88px);
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  #toasts {
+    bottom: calc(6px + env(safe-area-inset-bottom) + 88px);
+  }
+  .craft {
+    max-height: min(58vh, 280px);
+  }
+}
+
+/* Portrait estreito (~390px): evita overflow do HUD/recursos */
+@media (orientation: portrait) and (max-width: 430px) {
+  .topbar {
+    gap: 3px;
+  }
+  .chip {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+  .chip .bar {
+    width: 28px;
+  }
+  .res {
+    font-size: 9px;
+    padding: 3px 2px;
+  }
+  .hud-actions button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .slot {
+    width: 48px;
+    min-height: 48px;
+  }
+  .stick {
+    width: 120px;
+    height: 120px;
+  }
+  .touch-actions button {
+    width: 72px;
+    height: 72px;
+  }
+  .touch-actions #btn-atk {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .touch-actions button:active,
+  .touch-extra button:active,
+  .slot:active,
+  button:active,
+  .btn:active {
+    transform: none;
+    filter: none;
+  }
+  .banner {
+    transition: none;
+  }
 }
