@@ -10,11 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/game.css?v=202610012300" />
+  <link rel="stylesheet" href="css/game.css?v=202610020205" />
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610012300"
+      "three": "./js/vendor/three.module.js?v=202610020205"
     }
   }
   </script>
@@ -86,6 +86,7 @@
         <p class="tagline">De dia você planta, corta madeira e fortalece a clareira. De noite, ondas de zumbis tentam derrubar a cabana. Sobreviva o máximo de ciclos que puder.</p>
         <p id="webgl-fail" class="webgl-fail hidden" role="alert"></p>
         <p class="record">Melhor recorde: <span id="best-menu">0</span> noites</p>
+        <p class="record daily-meta" id="daily-menu">Hoje: 0 noites · Melhor do dia: 0</p>
         <div class="row">
           <button type="button" id="btn-start">Começar</button>
         </div>
@@ -133,6 +134,7 @@
         <p class="tagline" id="over-reason">A cabana não aguentou.</p>
         <p class="record">Noites sobrevivídas: <span id="over-nights">0</span></p>
         <p class="tagline">Melhor recorde: <span id="over-best">0</span> · Zumbis derrotados: <span id="over-kills">0</span></p>
+        <p class="record daily-meta" id="daily-over">Hoje: 0 noites · Melhor do dia: 0</p>
         <p class="tagline" id="over-extra"></p>
         <div class="row">
           <button type="button" id="btn-restart-over">Jogar de novo</button>
@@ -141,8 +143,8 @@
       </div>
     </div>
 
-    <div class="foot" id="ver">v1.5.2</div>
+    <div class="foot" id="ver">v1.5.3</div>
   </div>
-  <script type="module" src="js/main.js?v=202610012300"></script>
+  <script type="module" src="js/main.js?v=202610020205"></script>
 </body>
 </html>

@@ -336,18 +336,18 @@ button:disabled {
 .res {
   flex: 1 1 0;
   min-width: 0;
-  background: #3a2c20ee;
-  border: 1px solid #e8c48a88;
+  background: #2a1e14f0;
+  border: 1px solid #e8c48aaa;
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #fff3d6;
+  color: #fff8e0;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 0 1px 0 #00000055;
+  box-shadow: 0 1px 0 #00000066;
 }
 
 .res span {
@@ -419,6 +419,14 @@ button:disabled {
   gap: 4px;
   pointer-events: none;
   z-index: var(--z-banner);
+}
+
+
+.daily-meta {
+  color: #d8c6a0;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 4px 0 10px;
 }
 
 .toast {
@@ -689,12 +697,17 @@ button:disabled {
     margin: 0 6px 6px;
     width: auto;
     max-height: min(46vh, 360px);
-    padding: 8px 10px;
+    padding: 10px 12px;
     border-radius: 12px;
+    background: #0b1014f5;
+    border: 1px solid #c4a06077;
+    box-shadow: 0 10px 28px #000000cc, 0 0 0 1px #00000088 inset;
   }
 
   .craft-head h2 {
-    font-size: 16px;
+    font-size: 17px;
+    color: #ffe7b3;
+    letter-spacing: 0.02em;
   }
 
   .craft-head button {
@@ -704,13 +717,47 @@ button:disabled {
   }
 
   .craft .tagline {
-    display: none;
+    display: block;
+    font-size: 12px;
+    color: #d2c4ae;
+    margin-bottom: 8px;
   }
 
   .recipe {
-    margin-bottom: 4px;
-    padding: 6px 8px;
-    font-size: 13px;
+    margin-bottom: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff8e8;
+    background: #1a222aea;
+    border: 1px solid #e8c48a55;
+  }
+
+  .recipe .sub {
+    color: #cbb79a;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* Resource HUD: contraste forte no celular */
+  .resbar {
+    gap: 5px;
+  }
+
+  .res {
+    padding: 4px 5px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff8e0;
+    background: #140e0af2;
+    border: 1.5px solid #e8c48acc;
+    text-shadow: 0 1px 2px #000000cc;
+    box-shadow: 0 1px 0 #00000088, 0 0 0 1px #00000066 inset;
+  }
+
+  .res span {
+    color: #ffd78a;
+    font-weight: 900;
   }
 
   .stick {

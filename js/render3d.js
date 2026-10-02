@@ -4,9 +4,9 @@
  * Se o WebGL falhar, o main.js cai no canvas 2D.
  */
 import * as THREE from "three";
-import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202610012300";
-import { T } from "./world.js?v=202610012300";
-import { MODE } from "./game.js?v=202610012300";
+import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202610020205";
+import { T } from "./world.js?v=202610020205";
+import { MODE } from "./game.js?v=202610020205";
 
 const DAY_FOG = 0x87a090;
 const DUSK_FOG = 0x4a2818;
