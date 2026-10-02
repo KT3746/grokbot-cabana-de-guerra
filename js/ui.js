@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202609280152";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202609280152";
-import { MODE, PHASE } from "./game.js?v=202609280152";
+import { VERSION } from "./version.js?v=202610012300";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610012300";
+import { MODE, PHASE } from "./game.js?v=202610012300";
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
@@ -182,6 +182,10 @@ function syncScreens(game) {
   hide("screen-tut", game.mode === MODE.PLAY && game.showTutorial);
   hide("screen-over", game.mode === MODE.OVER);
   hide("hud", game.mode === MODE.PLAY || game.mode === MODE.PAUSE);
+  hide(
+    "first-tip",
+    game.mode === MODE.PLAY && game.showFirstTip && !game.showTutorial && !game.showCraft
+  );
   hide("craft", game.showCraft && game.mode === MODE.PLAY && !game.showTutorial);
   const coarse = matchMedia("(pointer: coarse)").matches || matchMedia("(max-width: 900px)").matches;
   const touchOn = game.mode === MODE.PLAY && !game.showTutorial && !game.showCraft && (coarse || window.innerWidth <= 900);
