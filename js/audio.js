@@ -211,6 +211,33 @@ export class AudioSys {
   ui() {
     this.tone(660, "sine", 0.05, 0.05);
   }
+  /** Sirene curta no início da noite (alerta). */
+  siren() {
+    if (!this.unlocked || this.muted || !this.ctx) return;
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(420, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(780, ctx.currentTime + 0.28);
+    osc.frequency.linearRampToValueAtTime(380, ctx.currentTime + 0.55);
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.11, ctx.currentTime + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+    osc.connect(g);
+    g.connect(this.sfxGain);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.65);
+    this.noise(0.12, 0.05, 900);
+  }
+
+  /** Suco sonoro ao nocautear zumbi. */
+  kill() {
+    this.tone(520, "square", 0.06, 0.07);
+    setTimeout(() => this.tone(780, "sine", 0.09, 0.06), 40);
+    this.noise(0.05, 0.07, 1400);
+  }
+
   dusk() {
     this.tone(196, "triangle", 0.25, 0.08, -40);
     setTimeout(() => this.tone(146, "triangle", 0.35, 0.07), 180);

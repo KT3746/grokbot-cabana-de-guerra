@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202610012300";
-import { T } from "./world.js?v=202610012300";
-import { MODE } from "./game.js?v=202610012300";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202610020205";
+import { T } from "./world.js?v=202610020205";
+import { MODE } from "./game.js?v=202610020205";
 
 export class Renderer {
   constructor(canvas, game) {

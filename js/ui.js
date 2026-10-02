@@ -1,12 +1,20 @@
-import { VERSION } from "./version.js?v=202610012300";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610012300";
-import { MODE, PHASE } from "./game.js?v=202610012300";
+import { VERSION } from "./version.js?v=202610020205";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610020205";
+import { MODE, PHASE } from "./game.js?v=202610020205";
+
+function fmtDaily(d) {
+  const nights = d && d.nights != null ? d.nights : 0;
+  const best = d && d.best != null ? d.best : 0;
+  return `Hoje: ${nights} noites · Melhor do dia: ${best}`;
+}
 
 export function bindUI(game, audio) {
   const $ = (id) => document.getElementById(id);
 
   $("ver").textContent = `v${VERSION}`;
   $("best-menu").textContent = String(game.best);
+  const dm = $("daily-menu");
+  if (dm) dm.textContent = fmtDaily(game.daily);
 
   const blur = () => {
     try {
@@ -198,6 +206,8 @@ function sync(game, audio) {
   const $ = (id) => document.getElementById(id);
   $("ver").textContent = `v${VERSION}`;
   $("best-menu").textContent = String(game.best);
+  const dailyMenu = $("daily-menu");
+  if (dailyMenu) dailyMenu.textContent = fmtDaily(game.daily);
   $("btn-mute").textContent = audio.muted ? "Som off" : "Som on";
 
   if (game.mode === MODE.OVER) {
@@ -206,6 +216,8 @@ function sync(game, audio) {
     $("over-nights").textContent = String(snap.nights ?? game.nightsSurvived);
     $("over-best").textContent = String(game.best);
     $("over-kills").textContent = String(snap.kills ?? game.kills);
+    const dailyOver = $("daily-over");
+    if (dailyOver) dailyOver.textContent = fmtDaily(game.daily);
     const extra = $("over-extra");
     if (extra) extra.textContent = snap.detail || "";
   }

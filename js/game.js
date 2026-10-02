@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610012300";
+} from "./data.js?v=202610020205";
 import {
   createWorld,
   T,
@@ -18,8 +18,45 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610012300";
-import { STORAGE_KEY } from "./version.js?v=202610012300";
+} from "./world.js?v=202610020205";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610020205";
+
+function brtDateKey() {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+  } catch (_) {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+function loadDailyMeta() {
+  const today = brtDateKey();
+  try {
+    const raw = localStorage.getItem(DAILY_KEY);
+    if (!raw) return { d: today, nights: 0, best: 0 };
+    const o = JSON.parse(raw);
+    if (!o || o.d !== today) return { d: today, nights: 0, best: 0 };
+    return {
+      d: today,
+      nights: Math.max(0, Number(o.nights) || 0),
+      best: Math.max(0, Number(o.best) || 0),
+    };
+  } catch (_) {
+    return { d: today, nights: 0, best: 0 };
+  }
+}
+
+function saveDailyMeta(meta) {
+  try {
+    localStorage.setItem(DAILY_KEY, JSON.stringify(meta));
+  } catch (_) { /* ok */ }
+}
+
 
 const TIP_KEY = "nnc-first-tip";
 const TIP_MAX_S = 60;
@@ -46,6 +83,7 @@ export class Game {
     this.audio = audio;
     this.mode = MODE.MENU;
     this.best = Number(localStorage.getItem(STORAGE_KEY) || 0);
+    this.daily = loadDailyMeta();
     this.seenTutorial = localStorage.getItem("nnc-tutorial") === "1";
     this.seenFirstTip = localStorage.getItem(TIP_KEY) === "1";
     this.showTutorial = false;
@@ -190,6 +228,7 @@ export class Game {
 
   loadBest() {
     this.best = Number(localStorage.getItem(STORAGE_KEY) || 0);
+    this.daily = loadDailyMeta();
   }
 
   toast(msg) {
@@ -249,6 +288,15 @@ export class Game {
       this.flash = Math.max(this.flash, flash);
       this.flashTint = tint;
     }
+  }
+
+  /** Soft diário (BRT): noites sobrevividas hoje + melhor run do dia. */
+  _touchDaily(nightsSurvived) {
+    this.daily = loadDailyMeta();
+    const n = Math.max(0, Number(nightsSurvived) || 0);
+    if (n > 0) this.daily.nights += 1; // +1 soft por noite concluída
+    if (n > this.daily.best) this.daily.best = n;
+    saveDailyMeta(this.daily);
   }
 
   dismissFirstTip() {
@@ -875,6 +923,9 @@ export class Game {
     this.phaseMax = n === 1 ? 44 : NIGHT_BASE + n * 7;
     this.phaseT = this.phaseMax;
     this.wave = 0;
+    try { this.audio.siren(); } catch (_) { /* ok */ }
+    // Flash curto de alerta; juice() já respeita prefers-reduced-motion.
+    this.juice(2.8, 0.16, "dusk");
     if (n === 1) {
       this.spawnT = 4.2;
       this._banner("Toque em Atacar quando o zumbi chegar perto");
@@ -892,8 +943,9 @@ export class Game {
     this.nightsSurvived += 1;
     if (this.nightsSurvived > this.best) {
       this.best = this.nightsSurvived;
-      localStorage.setItem(STORAGE_KEY, String(this.best));
+      try { localStorage.setItem(STORAGE_KEY, String(this.best)); } catch (_) { /* ok */ }
     }
+    this._touchDaily(this.nightsSurvived);
     this.juice(2.5, 0.22, "dawn");
     this.vignette = Math.max(this.vignette || 0, 0.35);
     this._banner(`O sol nasceu. Noites sobrevivídas: ${this.nightsSurvived}`);
@@ -1100,9 +1152,13 @@ export class Game {
     if (z.hp <= 0) {
       this.kills += 1;
       this.blood(z.x, z.y, 16);
+      this.burst(z.x, z.y, 8, "#c4a060", 95);
+      this.burst(z.x, z.y, 5, "#ffe7b3", 60);
       this.shake = Math.max(this.shake, 6);
-    this.hitStop(35);
-    this.vibrate(14);
+      this.hitStop(35);
+      this.vibrate(14);
+      this.juice(4.2, 0.2, "loot");
+      try { this.audio.kill(); } catch (_) { /* ok */ }
       this.floater(z.x, z.y - 22, "nocaute", "#c4a060");
       if (Math.random() < 0.12) {
         this.inv.comida += 1;
@@ -1167,7 +1223,13 @@ export class Game {
     try { this.audio.gameover(); } catch (_) { /* ok */ }
     if (this.nightsSurvived > this.best) {
       this.best = this.nightsSurvived;
-      localStorage.setItem(STORAGE_KEY, String(this.best));
+      try { localStorage.setItem(STORAGE_KEY, String(this.best)); } catch (_) { /* ok */ }
+    }
+    // Melhor do dia sem somar noites de novo (já contadas no amanhecer).
+    this.daily = loadDailyMeta();
+    if (this.nightsSurvived > this.daily.best) {
+      this.daily.best = this.nightsSurvived;
+      saveDailyMeta(this.daily);
     }
   }
 
