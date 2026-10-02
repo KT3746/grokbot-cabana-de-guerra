@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
-Versão atual: **1.5.1** — gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
+Versão atual: **1.5.2** — gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -67,7 +67,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro, com Three.
 - `css/game.css` — interface
 - `js/` — lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
 - `js/vendor/three.module.js` — Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
-- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202609280152`) para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610012300`) para o navegador não ficar com versão antiga após uma atualização
 - `js/vendor/three.module.js` — Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
 - Se o WebGL falhar, o jogo continua no canvas 2D e mostra um aviso em português
 

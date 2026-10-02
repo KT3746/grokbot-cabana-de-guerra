@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202609280152";
-import { T } from "./world.js?v=202609280152";
-import { MODE } from "./game.js?v=202609280152";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202610012300";
+import { T } from "./world.js?v=202610012300";
+import { MODE } from "./game.js?v=202610012300";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -41,6 +41,14 @@ export class Renderer {
     this.game.viewH = h;
   }
 
+  _reduceMotion() {
+    try {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (_) {
+      return false;
+    }
+  }
+
   draw(dt = 0.016) {
     this.t += dt;
     const g = this.game;
@@ -49,9 +57,10 @@ export class Renderer {
     const h = g.viewH;
     ctx.clearRect(0, 0, w, h);
 
+    const reduce = this._reduceMotion();
     let sx = 0;
     let sy = 0;
-    if (g.shake > 0) {
+    if (g.shake > 0 && !reduce) {
       sx = (Math.random() - 0.5) * g.shake;
       sy = (Math.random() - 0.5) * g.shake;
     }
@@ -80,8 +89,14 @@ export class Renderer {
     this._floaters();
     ctx.restore();
 
-    if (g.flash > 0) {
-      ctx.fillStyle = "rgba(90,8,8," + g.flash * 0.45 + ")";
+    if (g.flash > 0 && !reduce) {
+      const tint = g.flashTint || "hurt";
+      let rgb = "90,8,8";
+      let mul = 0.45;
+      if (tint === "loot") { rgb = "196,160,96"; mul = 0.35; }
+      else if (tint === "dusk") { rgb = "30,58,92"; mul = 0.5; }
+      else if (tint === "dawn") { rgb = "244,211,94"; mul = 0.38; }
+      ctx.fillStyle = "rgba(" + rgb + "," + (g.flash * mul) + ")";
       ctx.fillRect(0, 0, w, h);
     }
 

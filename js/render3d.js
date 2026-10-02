@@ -4,9 +4,9 @@
  * Se o WebGL falhar, o main.js cai no canvas 2D.
  */
 import * as THREE from "three";
-import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202609280152";
-import { T } from "./world.js?v=202609280152";
-import { MODE } from "./game.js?v=202609280152";
+import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202610012300";
+import { T } from "./world.js?v=202610012300";
+import { MODE } from "./game.js?v=202610012300";
 
 const DAY_FOG = 0x87a090;
 const DUSK_FOG = 0x4a2818;
@@ -926,13 +926,19 @@ export class Render3D {
       }
     }
 
-    const flash = g.flash || 0;
+    const flash = (g.flash || 0) && !this.reduceMotion ? (g.flash || 0) : 0;
     const vig = g.vignette || 0;
     if (flash > 0.01 || vig > 0.04) {
       this.flashMesh.visible = true;
       if (flash > 0.01) {
-        this.flashMesh.material.color.setHex(0x5a0808);
-        this.flashMesh.material.opacity = flash * 0.45;
+        const tint = g.flashTint || "hurt";
+        let hex = 0x5a0808;
+        let mul = 0.45;
+        if (tint === "loot") { hex = 0xc4a060; mul = 0.35; }
+        else if (tint === "dusk") { hex = 0x1e3a5c; mul = 0.5; }
+        else if (tint === "dawn") { hex = 0xf4d35e; mul = 0.38; }
+        this.flashMesh.material.color.setHex(hex);
+        this.flashMesh.material.opacity = flash * mul;
       } else {
         this.flashMesh.material.color.setHex(0x280404);
         this.flashMesh.material.opacity = Math.min(0.42, vig * 0.55);

@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202609280152";
+} from "./data.js?v=202610012300";
 import {
   createWorld,
   T,
@@ -18,8 +18,11 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202609280152";
-import { STORAGE_KEY } from "./version.js?v=202609280152";
+} from "./world.js?v=202610012300";
+import { STORAGE_KEY } from "./version.js?v=202610012300";
+
+const TIP_KEY = "nnc-first-tip";
+const TIP_MAX_S = 60;
 
 export const MODE = {
   MENU: "menu",
@@ -44,7 +47,10 @@ export class Game {
     this.mode = MODE.MENU;
     this.best = Number(localStorage.getItem(STORAGE_KEY) || 0);
     this.seenTutorial = localStorage.getItem("nnc-tutorial") === "1";
+    this.seenFirstTip = localStorage.getItem(TIP_KEY) === "1";
     this.showTutorial = false;
+    this.showFirstTip = false;
+    this.runAge = 0;
     this.showCraft = false;
     this.banner = "";
     this.bannerT = 0;
@@ -53,6 +59,7 @@ export class Game {
     this.vignette = 0;
     this.focusNode = null;
     this.flash = 0;
+    this.flashTint = "hurt";
     this.toasts = [];
     this.particles = [];
     this.fog = [];
@@ -119,6 +126,8 @@ export class Game {
     this.bannerT = 0;
     this.shake = 0;
     this.flash = 0;
+    this.flashTint = "hurt";
+    this.runAge = 0;
     this.showCraft = false;
     this.uiLock = 0;
     this.overSnap = null;
@@ -164,6 +173,8 @@ export class Game {
     this.showCraft = false;
     this.showTutorial = !this.seenTutorial;
     if (this.showTutorial) this.uiLock = 0.35;
+    this.runAge = 0;
+    this.showFirstTip = !this.seenFirstTip && !this.showTutorial;
     this.nightLight = 0;
     this.phase = PHASE.DAY;
     this.phaseT = DAY_LEN;
@@ -220,6 +231,35 @@ export class Game {
 
   hitStop(ms = 45) {
     this._hitStop = Math.max(this._hitStop || 0, ms / 1000);
+  }
+
+  _reduceMotion() {
+    try {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /** Soft juice: shake + optional tinted flash. No-ops under prefers-reduced-motion. */
+  juice(shake = 0, flash = 0, tint = "hurt") {
+    if (this._reduceMotion()) return;
+    if (shake > 0) this.shake = Math.max(this.shake, shake);
+    if (flash > 0) {
+      this.flash = Math.max(this.flash, flash);
+      this.flashTint = tint;
+    }
+  }
+
+  dismissFirstTip() {
+    if (!this.showFirstTip && this.seenFirstTip) return;
+    this.showFirstTip = false;
+    this.seenFirstTip = true;
+    try { localStorage.setItem(TIP_KEY, "1"); } catch (_) { /* ok */ }
+  }
+
+  _onMeaningfulAction() {
+    if (this.showFirstTip) this.dismissFirstTip();
   }
 
   blood(x, y, n = 8) {
@@ -331,6 +371,15 @@ export class Game {
 
     this.flash = Math.max(0, this.flash - dt);
     if (this.bannerT > 0) this.bannerT -= dt;
+    if (this._reduceMotion()) {
+      this.shake = 0;
+      this.flash = 0;
+    }
+
+    if (this.showFirstTip && !this.showTutorial) {
+      this.runAge += dt;
+      if (this.runAge >= TIP_MAX_S) this.dismissFirstTip();
+    }
 
     const nightGoal = this.phase === PHASE.NIGHT || this.phase === PHASE.DUSK ? 1 : 0;
     this.nightLight = lerpSafe(this.nightLight, nightGoal, dt * 1.6);
@@ -524,8 +573,10 @@ export class Game {
       this.shake = Math.max(this.shake, 5.5);
       this.hitStop(48);
       this.vibrate([8, 20, 12]);
+      this._onMeaningfulAction();
     } else {
       this.vibrate(6);
+      this._onMeaningfulAction();
     }
   }
 
@@ -576,6 +627,10 @@ export class Game {
         this.burst(tree.x, tree.y, 14, "#3a2818", 100);
         this.floater(tree.x, tree.y - 10, "+" + n + " madeira", "#c4a574");
         this.toast("Cortou uma árvore (+" + n + " madeira)");
+        this.juice(2.2, 0.14, "loot");
+        this._onMeaningfulAction();
+      } else {
+        this._onMeaningfulAction();
       }
       return;
     }
@@ -597,6 +652,10 @@ export class Game {
         this.inv.pedra += n;
         this.floater(rock.x, rock.y - 8, `+${n} pedra`, "#9aa3ad");
         this.toast("Quebrou uma pedra (+" + n + " pedra)");
+        this.juice(2.0, 0.12, "loot");
+        this._onMeaningfulAction();
+      } else {
+        this._onMeaningfulAction();
       }
       return;
     }
@@ -618,6 +677,10 @@ export class Game {
         this.inv.ferro += n;
         this.floater(vein.x, vein.y - 8, `+${n} ferro`, "#d7dee4");
         this.toast("Minerou ferro (+" + n + " ferro)");
+        this.juice(2.2, 0.14, "loot");
+        this._onMeaningfulAction();
+      } else {
+        this._onMeaningfulAction();
       }
       return;
     }
@@ -635,6 +698,8 @@ export class Game {
         this.audio.harvest();
         this.floater(plot.tx * TILE, plot.ty * TILE, `+${food} comida`, "#e07a5f");
         this.burst((plot.tx + 0.5) * TILE, (plot.ty + 0.5) * TILE, 8, "#8bc34a", 50);
+        this.juice(2.0, 0.12, "loot");
+        this._onMeaningfulAction();
       } else if (plot.state === "empty") {
         if (this.inv.sementes <= 0) {
           this.toast("Sem sementes.");
@@ -645,6 +710,7 @@ export class Game {
         plot.grow = 0;
         this.audio.place();
         this.toast("Plantou na horta.");
+        this._onMeaningfulAction();
       } else {
         this.toast("Ainda está crescendo…");
       }
@@ -759,6 +825,8 @@ export class Game {
       this.toast(`Criou ${rec.nome}.`);
     }
     this.audio.craft();
+    this.juice(1.6, 0.1, "loot");
+    this._onMeaningfulAction();
     return true;
   }
 
@@ -789,14 +857,16 @@ export class Game {
 
   _beginDusk() {
     this.phase = PHASE.DUSK;
-    this.vignette = 0.75;
+    this.vignette = 0.85;
     this.vibrate([30, 55, 30]);
     this.shake = Math.max(this.shake, 3);
+    this.juice(3.5, 0.28, "dusk");
     this.transT = 2.1;
     this.showCraft = false;
-    this._banner("Anoiteceu… eles estão vindo.");
+    this._banner("Anoiteceu… eles estão vindo. Defenda a cabana!");
     this.audio.dusk();
     this.audio.setNight(true);
+    this._onMeaningfulAction();
   }
 
   _beginNight() {
@@ -824,6 +894,8 @@ export class Game {
       this.best = this.nightsSurvived;
       localStorage.setItem(STORAGE_KEY, String(this.best));
     }
+    this.juice(2.5, 0.22, "dawn");
+    this.vignette = Math.max(this.vignette || 0, 0.35);
     this._banner(`O sol nasceu. Noites sobrevivídas: ${this.nightsSurvived}`);
     this.audio.dawn();
     this.audio.setNight(false);
@@ -1048,6 +1120,7 @@ export class Game {
     this.player.hurt = 0.35;
     this.shake = 8;
     this.flash = 0.2;
+    this.flashTint = "hurt";
     this.vignette = Math.max(this.vignette || 0, 0.55);
     this.hitStop(55);
     this.vibrate([18, 30, 18]);
@@ -1105,11 +1178,18 @@ export class Game {
     localStorage.setItem("nnc-tutorial", "1");
     this._centerCam();
     this.toast("WASD ou joystick para andar. Agir (E) coleta. Atacar na noite.");
+    if (!this.seenFirstTip) {
+      this.showFirstTip = true;
+      this.runAge = 0;
+    }
   }
 
   skipToNight() {
     if (this.uiLock > 0) return;
-    if (this.mode === MODE.PLAY && this.phase === PHASE.DAY && !this.showTutorial) this._beginDusk();
+    if (this.mode === MODE.PLAY && this.phase === PHASE.DAY && !this.showTutorial) {
+      this._onMeaningfulAction();
+      this._beginDusk();
+    }
   }
 }
 

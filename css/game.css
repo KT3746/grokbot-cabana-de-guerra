@@ -962,6 +962,42 @@ button.primary,
   }
 }
 
+
+/* First-minute tip (farm dia / defesa noite) */
+.first-tip {
+  position: absolute;
+  left: 50%;
+  top: calc(12px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: calc(var(--z-banner) + 2);
+  max-width: min(92vw, 420px);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #101418ee;
+  border: 1px solid #c4a06088;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+.first-tip strong {
+  color: var(--gold);
+  font-weight: 700;
+}
+.chip.phase-day {
+  box-shadow: 0 0 0 1px #c4a06055 inset;
+}
+.chip.phase-night {
+  box-shadow: 0 0 12px #1e3a5c99, 0 0 0 1px #4a7ab088 inset;
+  animation: phase-night-pulse 1.6s ease-in-out infinite;
+}
+@keyframes phase-night-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.18); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .touch-actions button:active,
   .touch-extra button:active,
@@ -972,6 +1008,12 @@ button.primary,
     filter: none;
   }
   .banner {
+    transition: none;
+  }
+  .chip.phase-night {
+    animation: none;
+  }
+  .first-tip {
     transition: none;
   }
 }
