@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610020205";
+} from "./data.js?v=202610052046";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610020205";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610020205";
+} from "./world.js?v=202610052046";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610052046";
 
 function brtDateKey() {
   try {
@@ -110,6 +110,13 @@ export class Game {
     this.mark = null;
     this.buildGhost = null;
     this.deathBy = "";
+    this.goals = { chop: false, plant: false, build: false };
+    this.dangerHp = false;
+    this.dangerCabin = false;
+    this._dangerBuzzed = false;
+    this.atkReady = false;
+    this.actHint = "Agir";
+    this.homeArrow = null; // { ang, dist } or null
     this.resetRun();
   }
 
@@ -172,6 +179,13 @@ export class Game {
     this.mark = null;
     this.buildGhost = null;
     this.deathBy = "";
+    this.goals = { chop: false, plant: false, build: false };
+    this.dangerHp = false;
+    this.dangerCabin = false;
+    this._dangerBuzzed = false;
+    this.atkReady = false;
+    this.actHint = "Agir";
+    this.homeArrow = null;
     if (this.audio) this.audio.setNight(false);
   }
 
@@ -424,9 +438,9 @@ export class Game {
       this.flash = 0;
     }
 
-    if (this.showFirstTip && !this.showTutorial) {
+    if (!this.showTutorial) {
       this.runAge += dt;
-      if (this.runAge >= TIP_MAX_S) this.dismissFirstTip();
+      if (this.showFirstTip && this.runAge >= TIP_MAX_S) this.dismissFirstTip();
     }
 
     const nightGoal = this.phase === PHASE.NIGHT || this.phase === PHASE.DUSK ? 1 : 0;
@@ -532,6 +546,8 @@ export class Game {
 
     this._refreshGhost();
     this.focusNode = this._nearestResource();
+    this._refreshHints();
+    this._refreshDanger();
     this.cam.x = clamp(p.x - this.viewW / 2, 0, Math.max(0, this.world.w - this.viewW));
     this.cam.y = clamp(p.y - this.viewH / 2, 0, Math.max(0, this.world.h - this.viewH));
   }
@@ -676,6 +692,7 @@ export class Game {
         this.floater(tree.x, tree.y - 10, "+" + n + " madeira", "#c4a574");
         this.toast("Cortou uma árvore (+" + n + " madeira)");
         this.juice(2.2, 0.14, "loot");
+        this.goals.chop = true;
         this._onMeaningfulAction();
       } else {
         this._onMeaningfulAction();
@@ -758,6 +775,7 @@ export class Game {
         plot.grow = 0;
         this.audio.place();
         this.toast("Plantou na horta.");
+        this.goals.plant = true;
         this._onMeaningfulAction();
       } else {
         this.toast("Ainda está crescendo…");
@@ -809,6 +827,7 @@ export class Game {
     this.burst(x, y, 8, "#c4a574", 50);
     this.mark = { x, y, t: 0.45 };
     this.toast(`Colocou ${kind}.`);
+    this.goals.build = true;
     p.actCd = 0.2;
     return true;
   }
@@ -874,6 +893,7 @@ export class Game {
     }
     this.audio.craft();
     this.juice(1.6, 0.1, "loot");
+    this.goals.build = true;
     this._onMeaningfulAction();
     return true;
   }
@@ -1231,6 +1251,92 @@ export class Game {
       this.daily.best = this.nightsSurvived;
       saveDailyMeta(this.daily);
     }
+  }
+
+
+  _refreshHints() {
+    const p = this.player;
+    const w = this._weapon();
+    let atkReady = false;
+    for (const z of this.zombies) {
+      if (!z || z.hp <= 0) continue;
+      const d = dist(p.x, p.y, z.x, z.y);
+      if (d <= (w.alcance || 48 * SCALE) + (z.r || 12 * SCALE) + 28 * SCALE) {
+        atkReady = true;
+        break;
+      }
+    }
+    this.atkReady = atkReady;
+
+    let hint = "Agir";
+    const reach = 92 * SCALE;
+    if (this.hot === 4) {
+      hint = "Reparar";
+    } else if (this.hot >= 1 && this.hot <= 3 && !this._resourceInReach()) {
+      const kinds = { 1: "Tocha", 2: "Cerca", 3: "Armadilha" };
+      hint = kinds[this.hot] || "Agir";
+    } else {
+      const tree = nearestNode(this.world.trees, p.x, p.y, (t) => !t.stump, reach);
+      const rock = nearestNode(this.world.rocks, p.x, p.y, (r) => !r.gone, reach);
+      const vein = nearestNode(this.world.veins, p.x, p.y, (v) => !v.gone, reach);
+      const plot = this._nearPlot(reach);
+      if (tree) hint = "Cortar";
+      else if (rock) hint = "Minar";
+      else if (vein) hint = "Ferro";
+      else if (plot) {
+        if (plot.state === "ready") hint = "Colher";
+        else if (plot.state === "empty") hint = "Plantar";
+        else hint = "Espera";
+      } else if (this.hot >= 1 && this.hot <= 3) {
+        const kinds = { 1: "Tocha", 2: "Cerca", 3: "Armadilha" };
+        hint = kinds[this.hot] || "Agir";
+      }
+    }
+    this.actHint = hint;
+
+    // Seta pra cabana à noite quando longe
+    const nightish = this.phase === PHASE.NIGHT || this.phase === PHASE.DUSK;
+    if (nightish) {
+      const c = this.world.cabin;
+      const dx = c.doorX - p.x;
+      const dy = c.doorY - p.y;
+      const d = Math.hypot(dx, dy);
+      if (d > 160 * SCALE) {
+        this.homeArrow = { ang: Math.atan2(dy, dx), dist: d };
+      } else {
+        this.homeArrow = null;
+      }
+    } else {
+      this.homeArrow = null;
+    }
+  }
+
+  _refreshDanger() {
+    const hpR = this.player.hp / this.player.maxHp;
+    const cabR = this.world.cabin.hp / this.world.cabin.maxHp;
+    const dangerHp = hpR < 0.35 && this.player.hp > 0;
+    const dangerCabin = cabR < 0.35 && this.world.cabin.hp > 0;
+    const any = dangerHp || dangerCabin;
+    if (any && !this._dangerBuzzed) {
+      this._dangerBuzzed = true;
+      this.vibrate([12, 40, 12, 40, 18]);
+    }
+    if (!any) this._dangerBuzzed = false;
+    this.dangerHp = dangerHp;
+    this.dangerCabin = dangerCabin;
+    if (any && !this._reduceMotion()) {
+      this.vignette = Math.max(this.vignette || 0, dangerHp ? 0.32 : 0.22);
+    }
+  }
+
+  aliveZombies() {
+    let n = 0;
+    for (const z of this.zombies) if (z && z.hp > 0) n += 1;
+    return n;
+  }
+
+  goalsDone() {
+    return !!(this.goals.chop && this.goals.plant && this.goals.build);
   }
 
   dismissTutorial() {

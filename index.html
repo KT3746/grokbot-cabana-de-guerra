@@ -10,11 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/game.css?v=202610020205" />
+  <link rel="stylesheet" href="css/game.css?v=202610052046" />
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610020205"
+      "three": "./js/vendor/three.module.js?v=202610052046"
     }
   }
   </script>
@@ -63,7 +63,13 @@
     <div id="first-tip" class="first-tip hidden" role="status" aria-live="polite">
       <strong>Dica:</strong> De dia, colete e fortaleça. De noite, defenda a cabana.
     </div>
-
+    <div id="day-goals" class="day-goals hidden" role="status" aria-live="polite">
+      <div class="goal" data-g="chop">Cortar árvore</div>
+      <div class="goal" data-g="plant">Plantar horta</div>
+      <div class="goal" data-g="build">Criar ou colocar</div>
+    </div>
+    <div id="home-arrow" class="home-arrow hidden" aria-hidden="true"><span>⌂</span></div>
+    <div id="danger-edge" class="danger-edge hidden" aria-hidden="true"></div>
 
     <div id="touch" class="touch hidden">
       <div id="stick" class="stick" aria-label="Controle de movimento" role="slider">
@@ -143,8 +149,8 @@
       </div>
     </div>
 
-    <div class="foot" id="ver">v1.5.3</div>
+    <div class="foot" id="ver">v1.6.0</div>
   </div>
-  <script type="module" src="js/main.js?v=202610020205"></script>
+  <script type="module" src="js/main.js?v=202610052046"></script>
 </body>
 </html>
