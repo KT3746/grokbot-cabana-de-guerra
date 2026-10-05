@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202610020205";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610020205";
-import { MODE, PHASE } from "./game.js?v=202610020205";
+import { VERSION } from "./version.js?v=202610052046";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610052046";
+import { MODE, PHASE } from "./game.js?v=202610052046";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -194,6 +194,15 @@ function syncScreens(game) {
     "first-tip",
     game.mode === MODE.PLAY && game.showFirstTip && !game.showTutorial && !game.showCraft
   );
+  const goalsOn =
+    game.mode === MODE.PLAY &&
+    !game.showTutorial &&
+    !game.showFirstTip &&
+    !game.showCraft &&
+    game.phase === PHASE.DAY &&
+    !game.goalsDone() &&
+    game.runAge < 120;
+  hide("day-goals", goalsOn);
   hide("craft", game.showCraft && game.mode === MODE.PLAY && !game.showTutorial);
   const coarse = matchMedia("(pointer: coarse)").matches || matchMedia("(max-width: 900px)").matches;
   const touchOn = game.mode === MODE.PLAY && !game.showTutorial && !game.showCraft && (coarse || window.innerWidth <= 900);
@@ -238,6 +247,10 @@ function sync(game, audio) {
   const t = Math.max(0, Math.ceil(game.phaseT));
   let phaseTxt = `${phaseName} ${nightNum || 1} · ${fmt(t)}`;
   if (game.phase === PHASE.NIGHT && game.wave > 0) phaseTxt += ` · onda ${game.wave}`;
+  if (game.phase === PHASE.NIGHT || game.phase === PHASE.DUSK) {
+    const zc = game.aliveZombies ? game.aliveZombies() : 0;
+    phaseTxt += ` · ${zc} zumbi${zc === 1 ? "" : "s"}`;
+  }
   $("phase-chip").textContent = phaseTxt;
   $("phase-chip").className = "chip " + (game.nightLight > 0.45 ? "phase-night" : "phase-day");
 
@@ -245,6 +258,52 @@ function sync(game, audio) {
   setBar("cabin-bar", game.world.cabin.hp / game.world.cabin.maxHp);
   $("hp-txt").textContent = `${Math.ceil(game.player.hp)}`;
   $("cabin-txt").textContent = `${Math.ceil(game.world.cabin.hp)}`;
+
+  const hpChip = $("hp-txt") && $("hp-txt").closest(".chip");
+  const cabinChip = $("cabin-txt") && $("cabin-txt").closest(".chip");
+  if (hpChip) hpChip.classList.toggle("danger-pulse", !!game.dangerHp);
+  if (cabinChip) cabinChip.classList.toggle("danger-pulse", !!game.dangerCabin);
+  const app = document.getElementById("app");
+  if (app) {
+    app.classList.toggle("danger-hp", !!game.dangerHp);
+    app.classList.toggle("danger-cabin", !!game.dangerCabin);
+  }
+  const edge = $("danger-edge");
+  if (edge) edge.classList.toggle("hidden", !(game.dangerHp || game.dangerCabin));
+
+  const btnAct = $("btn-act");
+  if (btnAct) {
+    const label = game.actHint || "Agir";
+    if (btnAct.textContent !== label) btnAct.textContent = label;
+    btnAct.classList.toggle("hint-ready", label !== "Agir" && label !== "Espera");
+  }
+  const btnAtk = $("btn-atk");
+  if (btnAtk) btnAtk.classList.toggle("atk-ready", !!game.atkReady);
+
+  const btnEat = $("btn-eat");
+  const btnEatHud = $("btn-eat-hud");
+  const hungry = !!game.dangerHp && (game.inv.comida || 0) > 0;
+  if (btnEat) btnEat.classList.toggle("eat-ready", hungry);
+  if (btnEatHud) btnEatHud.classList.toggle("eat-ready", hungry);
+
+  const arrow = $("home-arrow");
+  if (arrow) {
+    const ha = game.homeArrow;
+    const show = !!(ha && game.mode === MODE.PLAY && !game.showTutorial && !game.showCraft);
+    arrow.classList.toggle("hidden", !show);
+    if (show) {
+      const deg = (ha.ang * 180) / Math.PI + 90; // ⌂ tip points "up" by default
+      arrow.style.setProperty("--ha", `${deg.toFixed(1)}deg`);
+    }
+  }
+
+  const goals = $("day-goals");
+  if (goals) {
+    for (const el of goals.querySelectorAll(".goal")) {
+      const key = el.dataset.g;
+      el.classList.toggle("done", !!(game.goals && game.goals[key]));
+    }
+  }
 
   $("res-madeira").textContent = game.inv.madeira;
   $("res-pedra").textContent = game.inv.pedra;
