@@ -1,6 +1,6 @@
-import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202610052046";
-import { T } from "./world.js?v=202610052046";
-import { MODE } from "./game.js?v=202610052046";
+import { TILE, SCALE, hash2, lerp, WEAPONS } from "./data.js?v=202610060508";
+import { T } from "./world.js?v=202610060508";
+import { MODE } from "./game.js?v=202610060508";
 
 export class Renderer {
   constructor(canvas, game) {
@@ -47,6 +47,11 @@ export class Renderer {
     } catch (_) {
       return false;
     }
+  }
+
+  worldToScreen(x, y) {
+    const g = this.game;
+    return { x: x - g.cam.x, y: y - g.cam.y, behind: false };
   }
 
   draw(dt = 0.016) {

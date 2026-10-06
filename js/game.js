@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610052046";
+} from "./data.js?v=202610060508";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610052046";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610052046";
+} from "./world.js?v=202610060508";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610060508";
 
 function brtDateKey() {
   try {
@@ -117,6 +117,10 @@ export class Game {
     this.atkReady = false;
     this.actHint = "Agir";
     this.homeArrow = null; // { ang, dist } or null
+    this.threats = []; // wave4: marcadores de zumbi fora da tela
+    this.duskWarn = false;
+    this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0 };
+    this.dawnCard = null;
     this.resetRun();
   }
 
@@ -186,6 +190,10 @@ export class Game {
     this.atkReady = false;
     this.actHint = "Agir";
     this.homeArrow = null;
+    this.threats = [];
+    this.duskWarn = false;
+    this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0 };
+    this.dawnCard = null;
     if (this.audio) this.audio.setNight(false);
   }
 
@@ -455,6 +463,7 @@ export class Game {
       if (this.transT <= 0) this._beginDay();
     } else if (this.phase === PHASE.DAY) {
       this.phaseT -= dt;
+      if (!this.duskWarn && this.phaseT <= 10 && this.phaseT > 0) this._warnDusk();
       if (this.phaseT <= 0 || (input.skipPressed && this.uiLock <= 0)) this._beginDusk();
       this._growCrops(dt);
     } else if (this.phase === PHASE.NIGHT) {
@@ -486,6 +495,10 @@ export class Game {
       f.y -= 22 * dt;
     }
     this.floaters = this.floaters.filter((f) => f.t > 0).slice(-24);
+    if (this.dawnCard && this.mode === MODE.PLAY && !this.showCraft) {
+      this.dawnCard.t -= dt;
+      if (this.dawnCard.t <= 0) this.dawnCard = null;
+    }
     for (const t of this.toasts) t.t -= dt;
     this.toasts = this.toasts.filter((t) => t.t > 0);
   }
@@ -923,6 +936,24 @@ export class Game {
     }
   }
 
+  /** Wave4: aviso 10s antes do anoitecer (banner + vibração + chip laranja). */
+  _warnDusk() {
+    this.duskWarn = true;
+    const c = this.world.cabin;
+    const far = dist(this.player.x, this.player.y, c.doorX, c.doorY) > 220 * SCALE;
+    this._banner(far ? "A noite chega em 10s — volte pra cabana!" : "A noite chega em 10s — prepare a defesa!");
+    this.vibrate([20, 60, 20]);
+    try { this.audio.ui(); } catch (_) { /* ok */ }
+  }
+
+  /** 0..1 do tempo que resta na fase atual (barra do relógio no chip). */
+  phaseLeft() {
+    if (this.phase === PHASE.DAY || this.phase === PHASE.NIGHT) {
+      return clamp(this.phaseT / Math.max(1, this.phaseMax), 0, 1);
+    }
+    return this.phase === PHASE.DUSK ? 0 : 1;
+  }
+
   _beginDusk() {
     this.phase = PHASE.DUSK;
     this.vignette = 0.85;
@@ -943,6 +974,8 @@ export class Game {
     this.phaseMax = n === 1 ? 44 : NIGHT_BASE + n * 7;
     this.phaseT = this.phaseMax;
     this.wave = 0;
+    this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0, cabinStart: this.world.cabin.hp };
+    this.dawnCard = null;
     try { this.audio.siren(); } catch (_) { /* ok */ }
     // Flash curto de alerta; juice() já respeita prefers-reduced-motion.
     this.juice(2.8, 0.16, "dusk");
@@ -961,11 +994,24 @@ export class Game {
     this.phase = PHASE.DAWN;
     this.transT = 2.4;
     this.nightsSurvived += 1;
-    if (this.nightsSurvived > this.best) {
+    const record = this.nightsSurvived > this.best;
+    if (record) {
       this.best = this.nightsSurvived;
       try { localStorage.setItem(STORAGE_KEY, String(this.best)); } catch (_) { /* ok */ }
     }
     this._touchDaily(this.nightsSurvived);
+    const ns = this.nightStats || { kills: 0, sun: 0, cabin: 0, hp: 0 };
+    const left = this.zombies.filter((z) => z && z.hp > 0).length;
+    this.dawnCard = {
+      night: this.nightsSurvived,
+      kills: ns.kills,
+      sun: left,
+      cabin: Math.round(ns.cabin),
+      hp: Math.round(ns.hp),
+      cabinPct: Math.round((this.world.cabin.hp / this.world.cabin.maxHp) * 100),
+      record,
+      t: 5.2,
+    };
     this.juice(2.5, 0.22, "dawn");
     this.vignette = Math.max(this.vignette || 0, 0.35);
     this._banner(`O sol nasceu. Noites sobrevivídas: ${this.nightsSurvived}`);
@@ -979,6 +1025,7 @@ export class Game {
     this.phaseT = DAY_LEN;
     this.zombies = [];
     this.nightLight = 0;
+    this.duskWarn = false;
     respawnMorning(this.world);
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
     this.toast("Dia " + this.dayNumber() + ". Recursos voltaram a crescer.");
@@ -1171,6 +1218,7 @@ export class Game {
     this.floater(z.x, z.y - 14, "-" + Math.round(dmg), "#d4a090");
     if (z.hp <= 0) {
       this.kills += 1;
+      if (this.nightStats) this.nightStats.kills += 1;
       this.blood(z.x, z.y, 16);
       this.burst(z.x, z.y, 8, "#c4a060", 95);
       this.burst(z.x, z.y, 5, "#ffe7b3", 60);
@@ -1193,6 +1241,7 @@ export class Game {
     if (this.player.hurt > 0.05) return;
     dmg = Math.min(dmg, 22);
     this.player.hp -= dmg;
+    if (this.nightStats) this.nightStats.hp += dmg;
     this.player.hurt = 0.35;
     this.shake = 8;
     this.flash = 0.2;
@@ -1209,6 +1258,7 @@ export class Game {
   _hurtCabin(dmg) {
     if (!Number.isFinite(dmg) || dmg <= 0) return;
     this.world.cabin.hp -= dmg;
+    if (this.nightStats) this.nightStats.cabin += dmg;
     this.shake = 11;
     this.vignette = Math.max(this.vignette || 0, 0.4);
     this.audio.cabin();

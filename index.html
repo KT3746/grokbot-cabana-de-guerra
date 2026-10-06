@@ -10,11 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/game.css?v=202610052046" />
+  <link rel="stylesheet" href="css/game.css?v=202610060508" />
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/vendor/three.module.js?v=202610052046"
+      "three": "./js/vendor/three.module.js?v=202610060508"
     }
   }
   </script>
@@ -32,7 +32,7 @@
             <div class="chip"><span class="hud-label">Cabana </span><span class="bar cabin"><i id="cabin-bar"></i></span> <span id="cabin-txt">340</span></div>
             <div class="hud-actions">
               <button type="button" id="btn-noite">Enfrentar a noite</button>
-              <button type="button" id="btn-craft" class="ghost">Criar</button>
+              <button type="button" id="btn-craft" class="ghost"><span class="craft-lbl">Criar</span><span class="craft-badge hidden" id="craft-badge">0</span></button>
               <button type="button" id="btn-eat-hud" class="ghost">Comer</button>
               <button type="button" id="btn-pause" class="ghost">Pausar</button>
               <button type="button" id="btn-mute" class="ghost">Som on</button>
@@ -70,6 +70,18 @@
     </div>
     <div id="home-arrow" class="home-arrow hidden" aria-hidden="true"><span>⌂</span></div>
     <div id="danger-edge" class="danger-edge hidden" aria-hidden="true"></div>
+    <div id="threats" class="threats" aria-hidden="true"></div>
+    <div id="dawn-card" class="dawn-card hidden" role="status" aria-live="polite">
+      <div class="dawn-title">☀ <span id="dawn-night">Noite 1</span> vencida</div>
+      <div class="dawn-rec hidden" id="dawn-rec">Novo recorde!</div>
+      <div class="dawn-stats">
+        <div class="ds ds-kill"><b id="dawn-kills">0</b><small>nocautes</small></div>
+        <div class="ds ds-sun"><b id="dawn-sun">0</b><small>no sol</small></div>
+        <div class="ds ds-cabin"><b id="dawn-cabin">0</b><small>cabana</small></div>
+        <div class="ds ds-hp"><b id="dawn-hp">0</b><small>vida</small></div>
+      </div>
+      <div class="dawn-foot" id="dawn-foot">Cabana em 100% · +15 vida ao amanhecer</div>
+    </div>
 
     <div id="touch" class="touch hidden">
       <div id="stick" class="stick" aria-label="Controle de movimento" role="slider">
@@ -149,8 +161,8 @@
       </div>
     </div>
 
-    <div class="foot" id="ver">v1.6.0</div>
+    <div class="foot" id="ver">v1.7.0</div>
   </div>
-  <script type="module" src="js/main.js?v=202610052046"></script>
+  <script type="module" src="js/main.js?v=202610060508"></script>
 </body>
 </html>

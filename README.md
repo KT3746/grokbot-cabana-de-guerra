@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
-Versão atual: **1.6.0** — gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
+Versão atual: **1.7.0** — gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -20,6 +20,13 @@ Versão atual: **1.6.0** — gráfico 3D baixo-poli (Three.js), com fallback 2D 
 10. Meta soft do dia (BRT): noites sobrevividas hoje e melhor run do dia, também em `localStorage`.
 
 Coma para recuperar vida. Tochas iluminam a clareira. Cercas atrasam os zumbis.
+
+### Novidades 1.7.0 (onda 4)
+
+- **Relógio do ciclo**: barrinha no chip de Dia/Noite mostra quanto falta; 10s antes do anoitecer o chip fica laranja, vibra e avisa para voltar à cabana.
+- **Radar de zumbis**: à noite, setas vermelhas na borda da tela apontam zumbis fora da visão (número = grupo, seta grande = bruto).
+- **Resumo do amanhecer**: cartão com nocautes, zumbis queimados no sol, dano na cabana e na vida, e selo de novo recorde.
+- **Criar mais claro**: selo verde no botão Criar com quantos itens dá pra fazer agora; cada receita mostra "Pode criar" ou "Falta: …".
 
 ## Controles
 
@@ -68,7 +75,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro, com Three.
 - `css/game.css` — interface
 - `js/` — lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
 - `js/vendor/three.module.js` — Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
-- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610052046`) para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610060508`) para o navegador não ficar com versão antiga após uma atualização
 - `js/vendor/three.module.js` — Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
 - Se o WebGL falhar, o jogo continua no canvas 2D e mostra um aviso em português
 
