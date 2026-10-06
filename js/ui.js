@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202610052046";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610052046";
-import { MODE, PHASE } from "./game.js?v=202610052046";
+import { VERSION } from "./version.js?v=202610060508";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610060508";
+import { MODE, PHASE } from "./game.js?v=202610060508";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -212,6 +212,8 @@ function syncScreens(game) {
 
 function sync(game, audio) {
   syncScreens(game);
+  syncThreats(game);
+  syncDawn(game);
   const $ = (id) => document.getElementById(id);
   $("ver").textContent = `v${VERSION}`;
   $("best-menu").textContent = String(game.best);
@@ -251,8 +253,14 @@ function sync(game, audio) {
     const zc = game.aliveZombies ? game.aliveZombies() : 0;
     phaseTxt += ` · ${zc} zumbi${zc === 1 ? "" : "s"}`;
   }
-  $("phase-chip").textContent = phaseTxt;
-  $("phase-chip").className = "chip " + (game.nightLight > 0.45 ? "phase-night" : "phase-day");
+  const chip = $("phase-chip");
+  if (chip.textContent !== phaseTxt) chip.textContent = phaseTxt;
+  const warn = game.phase === PHASE.DAY && game.phaseT <= 10;
+  const cls = "chip phase-clock " + (game.nightLight > 0.45 ? "phase-night" : "phase-day") + (warn ? " phase-warn" : "");
+  if (chip.className !== cls) chip.className = cls;
+  const left = game.phaseLeft ? game.phaseLeft() : 1;
+  chip.style.setProperty("--pp", `${(left * 100).toFixed(1)}%`);
+
 
   setBar("hp-bar", game.player.hp / game.player.maxHp);
   setBar("cabin-bar", game.world.cabin.hp / game.world.cabin.maxHp);
@@ -314,7 +322,8 @@ function sync(game, audio) {
   $("btn-noite").classList.toggle("hidden", game.phase !== PHASE.DAY || game.showCraft);
 
   const banner = $("banner");
-  banner.classList.toggle("hidden", game.bannerT <= 0);
+  const dawnOn = !!(game.dawnCard && !game.showCraft);
+  banner.classList.toggle("hidden", game.bannerT <= 0 || dawnOn);
   banner.textContent = game.banner;
 
   const toasts = $("toasts");
@@ -335,6 +344,13 @@ function sync(game, audio) {
     }
   });
 
+  let canMake = 0;
+  for (const rec of RECIPES) {
+    const owned0 = rec.tipo === "arma" && game.weapons[rec.id];
+    if (!owned0 && canPay(game.inv, rec.custo)) canMake += 1;
+  }
+  syncCraftBadge(game, canMake);
+
   for (const rec of RECIPES) {
     const el = document.querySelector(`#recipes .recipe[data-id="${rec.id}"]`);
     if (!el) continue;
@@ -342,13 +358,90 @@ function sync(game, audio) {
       .map(([k, v]) => `${v} ${k}`)
       .join(" · ");
     const owned = rec.tipo === "arma" && game.weapons[rec.id];
-    const html = `<strong>${rec.nome}${owned ? " ✓" : ""}</strong><span class="sub">${rec.desc} — ${custo}</span>`;
+    const miss = owned ? [] : Object.entries(rec.custo)
+      .filter(([k, v]) => (game.inv[k] || 0) < v)
+      .map(([k, v]) => `${v - (game.inv[k] || 0)} ${k}`);
+    const have = rec.ganha ? Object.keys(rec.ganha).map((k) => game.inv[k] || 0)[0] : null;
+    const state = owned
+      ? `<span class="rstate own">${game.equipped === rec.id ? "Equipada" : "Toque p/ equipar"}</span>`
+      : miss.length
+        ? `<span class="rstate miss">Falta: ${miss.join(", ")}</span>`
+        : `<span class="rstate ok">Pode criar${have != null ? ` · tem ${have}` : ""}</span>`;
+    const html = `<strong>${rec.nome}${owned ? " ✓" : ""}</strong><span class="sub">${rec.desc} — ${custo}</span>${state}`;
     if (el.dataset.html !== html) {
       el.innerHTML = html;
       el.dataset.html = html;
     }
     el.disabled = owned ? false : !canPay(game.inv, rec.custo);
   }
+}
+
+let lastCanMake = -1;
+let craftNewT = 0;
+function syncCraftBadge(game, n) {
+  const badge = document.getElementById("craft-badge");
+  const btn = document.getElementById("btn-craft");
+  if (!badge || !btn) return;
+  const day = game.phase === PHASE.DAY;
+  if (lastCanMake >= 0 && n > lastCanMake && day && !game.showCraft) craftNewT = performance.now() + 2600;
+  lastCanMake = n;
+  const show = n > 0 && !game.showCraft;
+  badge.classList.toggle("hidden", !show);
+  const txt = String(n);
+  if (badge.textContent !== txt) badge.textContent = txt;
+  btn.classList.toggle("craft-new", show && performance.now() < craftNewT);
+}
+
+const threatPool = [];
+function syncThreats(game) {
+  const box = document.getElementById("threats");
+  if (!box) return;
+  const list = game.threats || [];
+  while (threatPool.length < list.length) {
+    const el = document.createElement("div");
+    el.className = "threat";
+    el.innerHTML = '<i class="tri"></i><b></b>';
+    box.appendChild(el);
+    threatPool.push(el);
+  }
+  threatPool.forEach((el, i) => {
+    const t = list[i];
+    if (!t) {
+      if (el.style.display !== "none") el.style.display = "none";
+      return;
+    }
+    el.style.display = "";
+    el.style.transform = `translate(${t.x.toFixed(0)}px, ${t.y.toFixed(0)}px)`;
+    el.style.setProperty("--ta", `${((t.ang * 180) / Math.PI).toFixed(1)}deg`);
+    el.style.setProperty("--tn", t.near.toFixed(2));
+    el.classList.toggle("bruto", !!t.bruto);
+    const b = el.lastChild;
+    const txt = t.n > 1 ? String(t.n) : "";
+    if (b.textContent !== txt) b.textContent = txt;
+  });
+}
+
+function syncDawn(game) {
+  const card = document.getElementById("dawn-card");
+  if (!card) return;
+  const d = game.dawnCard;
+  const show = !!(d && game.mode === MODE.PLAY && !game.showCraft && !game.showTutorial);
+  card.classList.toggle("hidden", !show);
+  if (!show) return;
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el && el.textContent !== v) el.textContent = v;
+  };
+  set("dawn-night", `Noite ${d.night}`);
+  set("dawn-kills", String(d.kills));
+  set("dawn-sun", String(d.sun));
+  set("dawn-cabin", d.cabin > 0 ? `−${d.cabin}` : "0");
+  set("dawn-hp", d.hp > 0 ? `−${d.hp}` : "0");
+  const tip = d.cabinPct < 50 ? "faça um kit de reparo" : d.hp > 60 ? "plante comida" : "+15 vida ao amanhecer";
+  set("dawn-foot", `Cabana em ${d.cabinPct}% · ${tip}`);
+  const rec = document.getElementById("dawn-rec");
+  if (rec) rec.classList.toggle("hidden", !d.record);
+  card.classList.toggle("fading", d.t < 0.6);
 }
 
 function setBar(id, ratio) {
