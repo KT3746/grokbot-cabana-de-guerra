@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610070436";
+} from "./data.js?v=202610070439";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610070436";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610070436";
+} from "./world.js?v=202610070439";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610070439";
 
 function brtDateKey() {
   try {
@@ -244,7 +244,7 @@ export class Game {
     this.phaseT = DAY_LEN;
     this.phaseMax = DAY_LEN;
     this._centerCam();
-    this._banner("O dia começa  -  colete, plante e fortaleça.");
+    this._banner("O dia começa - colete, plante e fortaleça.");
     this.audio.setNight(false);
   }
 
@@ -959,7 +959,7 @@ export class Game {
     this.duskWarn = true;
     const c = this.world.cabin;
     const far = dist(this.player.x, this.player.y, c.doorX, c.doorY) > 220 * SCALE;
-    this._banner(far ? "A noite chega em 10s  -  volte pra cabana!" : "A noite chega em 10s  -  prepare a defesa!");
+    this._banner(far ? "A noite chega em 10s - volte pra cabana!" : "A noite chega em 10s - prepare a defesa!");
     this.vibrate([20, 60, 20]);
     try { this.audio.ui(); } catch (_) { /* ok */ }
   }
@@ -1006,7 +1006,7 @@ export class Game {
     } else {
       this.spawnT = 0;
       this._spawnWaves(0.05);
-      this._banner(`Noite ${n}  -  defenda a cabana!`);
+      this._banner(`Noite ${n} - defenda a cabana!`);
     }
   }
 
