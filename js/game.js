@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610060508";
+} from "./data.js?v=202610070436";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610060508";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610060508";
+} from "./world.js?v=202610070436";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610070436";
 
 function brtDateKey() {
   try {
@@ -121,6 +121,8 @@ export class Game {
     this.duskWarn = false;
     this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0 };
     this.dawnCard = null;
+    this.streak = { n: 0, t: 0 }; // wave5: sequência de nocautes
+    this.waveSplash = null; // { n, t } anúncio de onda
     this.resetRun();
   }
 
@@ -194,6 +196,8 @@ export class Game {
     this.duskWarn = false;
     this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0 };
     this.dawnCard = null;
+    this.streak = { n: 0, t: 0 };
+    this.waveSplash = null;
     if (this.audio) this.audio.setNight(false);
   }
 
@@ -240,7 +244,7 @@ export class Game {
     this.phaseT = DAY_LEN;
     this.phaseMax = DAY_LEN;
     this._centerCam();
-    this._banner("O dia começa — colete, plante e fortaleça.");
+    this._banner("O dia começa  -  colete, plante e fortaleça.");
     this.audio.setNight(false);
   }
 
@@ -501,6 +505,14 @@ export class Game {
     }
     for (const t of this.toasts) t.t -= dt;
     this.toasts = this.toasts.filter((t) => t.t > 0);
+    if (this.streak && this.streak.n > 0) {
+      this.streak.t -= dt;
+      if (this.streak.t <= 0) this.streak = { n: 0, t: 0 };
+    }
+    if (this.waveSplash) {
+      this.waveSplash.t -= dt;
+      if (this.waveSplash.t <= 0) this.waveSplash = null;
+    }
   }
 
   _updatePlayer(dt, input) {
@@ -520,6 +532,12 @@ export class Game {
       p.aim = Math.atan2(input.worldY - p.y, input.worldX - p.x);
     } else {
       p.aim = p.facing;
+    }
+    // Wave5: mira assistida no toque (só à noite ou com Atacar pressionado).
+    const nightish = this.phase === PHASE.NIGHT || this.phase === PHASE.DUSK;
+    if ((input.touchEnabled || input._stick.active) && (nightish || input.attackHeld || input.attackPressed)) {
+      const soft = this._softAimZombie();
+      if (soft != null) p.aim = soft;
     }
 
     p.atkCd = Math.max(0, p.atkCd - dt);
@@ -941,7 +959,7 @@ export class Game {
     this.duskWarn = true;
     const c = this.world.cabin;
     const far = dist(this.player.x, this.player.y, c.doorX, c.doorY) > 220 * SCALE;
-    this._banner(far ? "A noite chega em 10s — volte pra cabana!" : "A noite chega em 10s — prepare a defesa!");
+    this._banner(far ? "A noite chega em 10s  -  volte pra cabana!" : "A noite chega em 10s  -  prepare a defesa!");
     this.vibrate([20, 60, 20]);
     try { this.audio.ui(); } catch (_) { /* ok */ }
   }
@@ -976,6 +994,8 @@ export class Game {
     this.wave = 0;
     this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0, cabinStart: this.world.cabin.hp };
     this.dawnCard = null;
+    this.streak = { n: 0, t: 0 };
+    this.waveSplash = null;
     try { this.audio.siren(); } catch (_) { /* ok */ }
     // Flash curto de alerta; juice() já respeita prefers-reduced-motion.
     this.juice(2.8, 0.16, "dusk");
@@ -986,7 +1006,7 @@ export class Game {
     } else {
       this.spawnT = 0;
       this._spawnWaves(0.05);
-      this._banner(`Noite ${n} — defenda a cabana!`);
+      this._banner(`Noite ${n}  -  defenda a cabana!`);
     }
   }
 
@@ -1061,7 +1081,11 @@ export class Game {
     }
     for (let i = 0; i < count; i++) this._spawnZombie(night);
     this.spawnT = gap;
+    this.waveSplash = { n: this.wave, t: 1.65 };
+    this.vibrate([10, 30, 14]);
+    this.juice(2.2, 0.12, "dusk");
     if (this.wave === 1) this.toast("Uma onda se aproxima…");
+    else this.toast(`Onda ${this.wave} a caminho`);
   }
 
   _spawnZombie(night) {
@@ -1219,6 +1243,7 @@ export class Game {
     if (z.hp <= 0) {
       this.kills += 1;
       if (this.nightStats) this.nightStats.kills += 1;
+      this._noteStreak();
       this.blood(z.x, z.y, 16);
       this.burst(z.x, z.y, 8, "#c4a060", 95);
       this.burst(z.x, z.y, 5, "#ffe7b3", 60);
@@ -1377,6 +1402,39 @@ export class Game {
     if (any && !this._reduceMotion()) {
       this.vignette = Math.max(this.vignette || 0, dangerHp ? 0.32 : 0.22);
     }
+  }
+
+  /** Wave5: sequência de nocautes (janela 2.8s). */
+  _noteStreak() {
+    const s = this.streak || { n: 0, t: 0 };
+    if (s.t > 0) s.n += 1;
+    else s.n = 1;
+    s.t = 2.8;
+    this.streak = s;
+    if (s.n >= 2) {
+      this.floater(this.player.x, this.player.y - 28, `x${s.n} sequência`, "#ffd27a");
+      this.vibrate([8, 18, 8]);
+      if (s.n === 3 || s.n === 5 || s.n === 8) this.juice(3.0, 0.14, "loot");
+    }
+  }
+
+  /** Wave5: mira soft no toque - zumbi vivo mais perto dentro do alcance+folga. */
+  _softAimZombie() {
+    const p = this.player;
+    const w = this._weapon();
+    const reach = (w.alcance || 48 * SCALE) + 70 * SCALE;
+    let best = null;
+    let bestD = reach;
+    for (const z of this.zombies) {
+      if (!z || z.hp <= 0) continue;
+      const d = dist(p.x, p.y, z.x, z.y);
+      if (d < bestD) {
+        bestD = d;
+        best = z;
+      }
+    }
+    if (!best) return null;
+    return Math.atan2(best.y - p.y, best.x - p.x);
   }
 
   aliveZombies() {
