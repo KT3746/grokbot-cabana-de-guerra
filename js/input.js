@@ -51,7 +51,7 @@ export class Input {
       onPtr(e);
       const t = e.target;
       if (!t) return;
-      /* Canvas usa pointer-events:none — toque cai em #app; UI fica de fora. */
+      /* Canvas usa pointer-events:none  -  toque cai em #app; UI fica de fora. */
       const ui = typeof t.closest === "function" && t.closest(
         "button, a, input, textarea, select, .chip, .res, .slot, .craft, .overlay, .card, .touch-actions, .touch-extra, #stick, #stick-zone, .hotbar, .hud-actions, .recipe"
       );
@@ -111,7 +111,7 @@ export class Input {
 
 
   /** Joystick flutuante: toque na metade esquerda (fora da UI) reposiciona o stick sob o dedo.
-   * Ouve no window — a camada .touch tem pointer-events:none pra não cobrir o HUD. */
+   * Ouve no window  -  a camada .touch tem pointer-events:none pra não cobrir o HUD. */
   _bindFloatingStick() {
     const stick = document.getElementById("stick");
     if (!stick) return;

@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202610060508";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610060508";
-import { MODE, PHASE } from "./game.js?v=202610060508";
+import { VERSION } from "./version.js?v=202610070436";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610070436";
+import { MODE, PHASE } from "./game.js?v=202610070436";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -37,7 +37,7 @@ export function bindUI(game, audio) {
     syncScreens(game);
   };
 
-  /* pointerup no rótulo visível — click sozinho no mobile chega
+  /* pointerup no rótulo visível  -  click sozinho no mobile chega
      com coordenada da viewport de layout, não da visual. */
   const bindTap = (id, fn) => {
     const el = $(id);
@@ -214,6 +214,9 @@ function sync(game, audio) {
   syncScreens(game);
   syncThreats(game);
   syncDawn(game);
+  syncStreak(game);
+  syncWaveSplash(game);
+  syncResFlash(game);
   const $ = (id) => document.getElementById(id);
   $("ver").textContent = `v${VERSION}`;
   $("best-menu").textContent = String(game.best);
@@ -367,7 +370,7 @@ function sync(game, audio) {
       : miss.length
         ? `<span class="rstate miss">Falta: ${miss.join(", ")}</span>`
         : `<span class="rstate ok">Pode criar${have != null ? ` · tem ${have}` : ""}</span>`;
-    const html = `<strong>${rec.nome}${owned ? " ✓" : ""}</strong><span class="sub">${rec.desc} — ${custo}</span>${state}`;
+    const html = `<strong>${rec.nome}${owned ? " ✓" : ""}</strong><span class="sub">${rec.desc}  -  ${custo}</span>${state}`;
     if (el.dataset.html !== html) {
       el.innerHTML = html;
       el.dataset.html = html;
@@ -442,6 +445,76 @@ function syncDawn(game) {
   const rec = document.getElementById("dawn-rec");
   if (rec) rec.classList.toggle("hidden", !d.record);
   card.classList.toggle("fading", d.t < 0.6);
+}
+
+function syncStreak(game) {
+  const el = document.getElementById("streak-badge");
+  if (!el) return;
+  const s = game.streak;
+  const show = !!(s && s.n >= 2 && game.mode === MODE.PLAY && !game.showCraft && !game.showTutorial);
+  el.classList.toggle("hidden", !show);
+  if (!show) return;
+  const n = document.getElementById("streak-n");
+  const txt = `x${s.n}`;
+  if (n && n.textContent !== txt) n.textContent = txt;
+  el.classList.toggle("hot", s.n >= 5);
+  el.style.setProperty("--st", `${Math.max(0, Math.min(1, s.t / 2.8)).toFixed(2)}`);
+}
+
+function syncWaveSplash(game) {
+  const el = document.getElementById("wave-splash");
+  if (!el) return;
+  const w = game.waveSplash;
+  const show = !!(w && game.mode === MODE.PLAY && !game.showCraft && !game.showTutorial);
+  el.classList.toggle("hidden", !show);
+  if (!show) return;
+  const txt = document.getElementById("wave-splash-txt");
+  const label = `Onda ${w.n}`;
+  if (txt && txt.textContent !== label) txt.textContent = label;
+  el.classList.toggle("fading", w.t < 0.45);
+}
+
+const _resPrev = { madeira: -1, pedra: -1, comida: -1, ferro: -1, sementes: -1 };
+const _resFlashT = {};
+function syncResFlash(game) {
+  if (game.mode !== MODE.PLAY && game.mode !== MODE.PAUSE) return;
+  const map = {
+    madeira: "res-madeira",
+    pedra: "res-pedra",
+    comida: "res-comida",
+    ferro: "res-ferro",
+    sementes: "res-sementes",
+  };
+  const now = performance.now();
+  for (const [k, id] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const chip = el.closest(".res");
+    if (!chip) continue;
+    const cur = game.inv[k] || 0;
+    const prev = _resPrev[k];
+    if (prev >= 0 && cur !== prev) {
+      const delta = cur - prev;
+      chip.classList.remove("res-up", "res-down");
+      void chip.offsetWidth;
+      chip.classList.add(delta > 0 ? "res-up" : "res-down");
+      _resFlashT[k] = now + 900;
+      let tag = chip.querySelector(".res-delta");
+      if (!tag) {
+        tag = document.createElement("em");
+        tag.className = "res-delta";
+        chip.appendChild(tag);
+      }
+      tag.textContent = delta > 0 ? `+${delta}` : String(delta);
+    }
+    _resPrev[k] = cur;
+    if (_resFlashT[k] && now > _resFlashT[k]) {
+      chip.classList.remove("res-up", "res-down");
+      const tag = chip.querySelector(".res-delta");
+      if (tag) tag.remove();
+      delete _resFlashT[k];
+    }
+  }
 }
 
 function setBar(id, ratio) {

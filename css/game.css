@@ -1438,3 +1438,155 @@ button.primary,
   }
   .dawn-card { transition: none; }
 }
+
+/* ===== Wave 5: sequência, flash de recursos, anúncio de onda, mira assist ===== */
+.streak-badge {
+  position: absolute;
+  left: 50%;
+  top: calc(52% + env(safe-area-inset-top) * 0.1);
+  transform: translate(-50%, -50%);
+  z-index: calc(var(--z-banner) + 5);
+  min-width: 88px;
+  padding: 8px 14px 6px;
+  border-radius: 14px;
+  background: linear-gradient(#3a1810f2, #140a08f2);
+  border: 2px solid #ffb060;
+  box-shadow: 0 8px 24px #000000aa, 0 0 20px #ff8a3a66;
+  color: #ffe7d0;
+  text-align: center;
+  pointer-events: none;
+  animation: streak-pop 0.28s ease-out;
+}
+.streak-badge b {
+  display: block;
+  font-family: "Oswald", sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: #ffd27a;
+  text-shadow: 0 0 12px #ff8a3a88;
+}
+.streak-badge small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #d8c6a0;
+}
+.streak-badge::after {
+  content: "";
+  display: block;
+  margin-top: 5px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ffb060 calc(var(--st, 1) * 100%), #00000040 0);
+}
+.streak-badge.hot {
+  border-color: #ffe08a;
+  box-shadow: 0 8px 28px #000000aa, 0 0 28px #ffd27a88;
+}
+.streak-badge.hot b { color: #fff4c8; font-size: 32px; }
+@keyframes streak-pop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.wave-splash {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  transform: translate(-50%, -50%);
+  z-index: calc(var(--z-banner) + 6);
+  padding: 10px 22px;
+  border-radius: 12px;
+  background: linear-gradient(#4a1010f0, #1a0606f0);
+  border: 2px solid #e8483a;
+  box-shadow: 0 10px 28px #000000bb, 0 0 24px #e8483a66;
+  pointer-events: none;
+  animation: wave-pop 0.32s ease-out;
+  transition: opacity 0.4s ease;
+}
+.wave-splash span {
+  font-family: "Oswald", sans-serif;
+  font-size: 34px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffe7d8;
+  text-shadow: 0 2px 0 #7a1010, 0 0 16px #ff6a5a88;
+}
+.wave-splash.fading { opacity: 0; }
+@keyframes wave-pop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.res {
+  position: relative;
+  overflow: visible;
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.res.res-up {
+  background: #1a3018ee;
+  border-color: #9ccc65;
+  box-shadow: 0 0 12px #6a8a4888;
+  animation: res-flash-up 0.55s ease-out;
+}
+.res.res-down {
+  background: #301818ee;
+  border-color: #e85d4c;
+  box-shadow: 0 0 12px #b8303088;
+  animation: res-flash-down 0.55s ease-out;
+}
+.res .res-delta {
+  position: absolute;
+  right: 4px;
+  top: -10px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  color: #d8f0c0;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+  animation: res-delta-fly 0.9s ease-out forwards;
+}
+.res.res-down .res-delta { color: #ffc4b8; }
+@keyframes res-flash-up {
+  0% { filter: brightness(1.45); }
+  100% { filter: brightness(1); }
+}
+@keyframes res-flash-down {
+  0% { filter: brightness(1.35); }
+  100% { filter: brightness(1); }
+}
+@keyframes res-delta-fly {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+@media (max-width: 420px) {
+  .streak-badge { min-width: 78px; padding: 6px 12px 5px; }
+  .streak-badge b { font-size: 24px; }
+  .streak-badge.hot b { font-size: 28px; }
+  .wave-splash span { font-size: 26px; }
+  .wave-splash { top: 30%; padding: 8px 16px; }
+}
+@media (orientation: landscape) and (max-height: 430px) {
+  .streak-badge { top: 48%; padding: 4px 12px 3px; }
+  .streak-badge b { font-size: 20px; }
+  .wave-splash { top: 22%; padding: 4px 14px; }
+  .wave-splash span { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-badge,
+  .wave-splash,
+  .res.res-up,
+  .res.res-down,
+  .res .res-delta {
+    animation: none !important;
+  }
+  .wave-splash { transition: none; }
+  .res .res-delta { opacity: 1; transform: none; }
+}
