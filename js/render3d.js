@@ -1,12 +1,12 @@
 /**
- * CABANA DE GUERRA  -  cena Three.js baixo-poli (mobile-first).
+ * CABANA DE GUERRA - cena Three.js baixo-poli (mobile-first).
  * API espelha o Renderer 2D: init / resize / draw.
  * Se o WebGL falhar, o main.js cai no canvas 2D.
  */
 import * as THREE from "three";
-import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202610070436";
-import { T } from "./world.js?v=202610070436";
-import { MODE } from "./game.js?v=202610070436";
+import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202610070439";
+import { T } from "./world.js?v=202610070439";
+import { MODE } from "./game.js?v=202610070439";
 
 const DAY_FOG = 0x87a090;
 const DUSK_FOG = 0x4a2818;
@@ -597,7 +597,7 @@ export class Render3D {
     return { x: hit.x * TILE, y: hit.z * TILE };
   }
 
-  /** Wave4: projeta ponto do mundo (px) na tela (CSS px)  -  marcadores de zumbi fora da tela. */
+  /** Wave4: projeta ponto do mundo (px) na tela (CSS px) - marcadores de zumbi fora da tela. */
   worldToScreen(x, y) {
     if (!this.ok || !this.camera) return null;
     if (!this._proj) this._proj = new THREE.Vector3();

@@ -1,11 +1,11 @@
-import { VERSION } from "./version.js?v=202610070436";
-import { AudioSys } from "./audio.js?v=202610070436";
-import { Input } from "./input.js?v=202610070436";
-import { Game, MODE, PHASE } from "./game.js?v=202610070436";
-import { Renderer } from "./render.js?v=202610070436";
-import { Render3D } from "./render3d.js?v=202610070436";
-import { bindUI } from "./ui.js?v=202610070436";
-import { bindViewport } from "./viewport.js?v=202610070436";
+import { VERSION } from "./version.js?v=202610070439";
+import { AudioSys } from "./audio.js?v=202610070439";
+import { Input } from "./input.js?v=202610070439";
+import { Game, MODE, PHASE } from "./game.js?v=202610070439";
+import { Renderer } from "./render.js?v=202610070439";
+import { Render3D } from "./render3d.js?v=202610070439";
+import { bindUI } from "./ui.js?v=202610070439";
+import { bindViewport } from "./viewport.js?v=202610070439";
 
 const app = document.getElementById("app");
 let canvas = document.getElementById("game");
@@ -20,7 +20,7 @@ bindViewport(app, () => { if (renderer) renderer.resize(); });
 if (r3d.init(canvas, game)) {
   renderer = r3d;
 } else {
-  /* Canvas já com contexto WebGL não aceita 2D  -  troca por um canvas novo. */
+  /* Canvas já com contexto WebGL não aceita 2D - troca por um canvas novo. */
   try {
     const fresh = canvas.cloneNode(false);
     canvas.replaceWith(fresh);

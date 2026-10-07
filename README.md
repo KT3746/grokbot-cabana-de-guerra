@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
-Versão atual: **1.8.0**  -  gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
+Versão atual: **1.8.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -15,7 +15,7 @@ Versão atual: **1.8.0**  -  gráfico 3D baixo-poli (Three.js), com fallback 2D 
 5. Escolha o item na barra de atalhos e use **Agir** para construir à sua frente, ou chegue perto da cabana com um kit para reparar.
 6. Quando estiver pronto, toque em **Enfrentar a noite** (ou espere o relógio).
 7. **De noite:** ataque os zumbis, use armadilhas e proteja a porta. Se a **cabana** ou a **sua vida** chegar a zero, o jogo acaba.
-8. Sobreviva ao amanhecer para ganhar um novo dia  -  a dificuldade sobe a cada noite.
+8. Sobreviva ao amanhecer para ganhar um novo dia - a dificuldade sobe a cada noite.
 9. O recorde de noites fica salvo neste aparelho (`localStorage`).
 10. Meta soft do dia (BRT): noites sobrevividas hoje e melhor run do dia, também em `localStorage`.
 
@@ -78,12 +78,12 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro, com Three.
 
 ## Arquivos
 
-- `index.html`  -  página do jogo (GitHub Pages aponta para a raiz de `main`)
-- `css/game.css`  -  interface
-- `js/`  -  lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
-- `js/vendor/three.module.js`  -  Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
-- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610070436`) para o navegador não ficar com versão antiga após uma atualização
-- `js/vendor/three.module.js`  -  Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
+- `index.html` - página do jogo (GitHub Pages aponta para a raiz de `main`)
+- `css/game.css` - interface
+- `js/` - lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
+- `js/vendor/three.module.js` - Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
+- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610070439`) para o navegador não ficar com versão antiga após uma atualização
+- `js/vendor/three.module.js` - Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
 - Se o WebGL falhar, o jogo continua no canvas 2D e mostra um aviso em português
 
 ## Créditos

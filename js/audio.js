@@ -1,5 +1,5 @@
 /**
- * Som procedural com Web Audio  -  sem arquivos externos.
+ * Som procedural com Web Audio - sem arquivos externos.
  * Respeita autoplay: só toca depois do primeiro toque/clique.
  */
 export class AudioSys {

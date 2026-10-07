@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202610070436";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610070436";
-import { MODE, PHASE } from "./game.js?v=202610070436";
+import { VERSION } from "./version.js?v=202610070439";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610070439";
+import { MODE, PHASE } from "./game.js?v=202610070439";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -37,7 +37,7 @@ export function bindUI(game, audio) {
     syncScreens(game);
   };
 
-  /* pointerup no rótulo visível  -  click sozinho no mobile chega
+  /* pointerup no rótulo visível - click sozinho no mobile chega
      com coordenada da viewport de layout, não da visual. */
   const bindTap = (id, fn) => {
     const el = $(id);
@@ -370,7 +370,7 @@ function sync(game, audio) {
       : miss.length
         ? `<span class="rstate miss">Falta: ${miss.join(", ")}</span>`
         : `<span class="rstate ok">Pode criar${have != null ? ` · tem ${have}` : ""}</span>`;
-    const html = `<strong>${rec.nome}${owned ? " ✓" : ""}</strong><span class="sub">${rec.desc}  -  ${custo}</span>${state}`;
+    const html = `<strong>${rec.nome}${owned ? " ✓" : ""}</strong><span class="sub">${rec.desc} - ${custo}</span>${state}`;
     if (el.dataset.html !== html) {
       el.innerHTML = html;
       el.dataset.html = html;
