@@ -1590,3 +1590,11 @@ button.primary,
   .wave-splash { transition: none; }
   .res .res-delta { opacity: 1; transform: none; }
 }
+
+/* Onda 6: noite perfeita */
+.dawn-perfect { margin: 4px auto 2px; width: fit-content; padding: 3px 12px; border-radius: 99px; font-weight: 800; font-size: 13px;
+  color: #2a1a00; background: linear-gradient(90deg, #ffcf5a, #fff0b0, #ffcf5a); box-shadow: 0 0 16px rgba(255,207,90,.6);
+  animation: dawn-perf-pop .5s cubic-bezier(.2,1.6,.4,1); }
+.dawn-perfect.hidden { display: none; }
+@keyframes dawn-perf-pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dawn-perfect { animation: none; } }

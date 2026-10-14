@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202610070439";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610070439";
-import { MODE, PHASE } from "./game.js?v=202610070439";
+import { VERSION } from "./version.js?v=202610142225";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610142225";
+import { MODE, PHASE } from "./game.js?v=202610142225";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -444,6 +444,15 @@ function syncDawn(game) {
   set("dawn-foot", `Cabana em ${d.cabinPct}% · ${tip}`);
   const rec = document.getElementById("dawn-rec");
   if (rec) rec.classList.toggle("hidden", !d.record);
+  let perf = document.getElementById("dawn-perfect");
+  if (!perf && rec) {
+    perf = document.createElement("div");
+    perf.id = "dawn-perfect";
+    perf.className = "dawn-perfect hidden";
+    perf.textContent = "★ Noite perfeita · +3 madeira +2 pedra";
+    rec.after(perf);
+  }
+  if (perf) perf.classList.toggle("hidden", !d.perfect);
   card.classList.toggle("fading", d.t < 0.6);
 }
 

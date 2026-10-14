@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
-Versão atual: **1.8.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
+Versão atual: **1.9.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -20,6 +20,12 @@ Versão atual: **1.8.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D se
 10. Meta soft do dia (BRT): noites sobrevividas hoje e melhor run do dia, também em `localStorage`.
 
 Coma para recuperar vida. Tochas iluminam a clareira. Cercas atrasam os zumbis.
+
+### Novidades 1.9.0 (onda 6)
+
+- **Golpe crítico**: 15% de chance (25% com sequência x3+) de CRÍTICO! dourado com dano x1,8, tremida e vibração.
+- **Colheita farta**: brilho dourado e folhas ao colher, vibração e 20% de chance de SAFRA BOA (+1 comida).
+- **Noite perfeita**: se a cabana não levar dano na noite, ganha +3 madeira e +2 pedra e um selo dourado no resumo do amanhecer.
 
 ### Novidades 1.8.0 (onda 5)
 
@@ -82,7 +88,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro, com Three.
 - `css/game.css` - interface
 - `js/` - lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
 - `js/vendor/three.module.js` - Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
-- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610070439`) para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202610142225`) para o navegador não ficar com versão antiga após uma atualização
 - `js/vendor/three.module.js` - Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
 - Se o WebGL falhar, o jogo continua no canvas 2D e mostra um aviso em português
 
