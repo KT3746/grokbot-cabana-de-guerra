@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610070439";
+} from "./data.js?v=202610142225";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610070439";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610070439";
+} from "./world.js?v=202610142225";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610142225";
 
 function brtDateKey() {
   try {
@@ -794,6 +794,14 @@ export class Game {
         this.audio.harvest();
         this.floater(plot.tx * TILE, plot.ty * TILE, `+${food} comida`, "#e07a5f");
         this.burst((plot.tx + 0.5) * TILE, (plot.ty + 0.5) * TILE, 8, "#8bc34a", 50);
+        // Onda 6: colheita farta — folhas e brilho dourado + vibração + chance de safra boa
+        this.burst((plot.tx + 0.5) * TILE, (plot.ty + 0.5) * TILE, 10, "#ffd76a", 75);
+        this.burst((plot.tx + 0.5) * TILE, (plot.ty + 0.3) * TILE, 6, "#c5e1a5", 40);
+        this.vibrate([8, 30, 12]);
+        if (Math.random() < 0.2) {
+          this.inv.comida += 1;
+          this.floater(plot.tx * TILE, plot.ty * TILE - 16, "SAFRA BOA! +1", "#ffd76a");
+        }
         this.juice(2.0, 0.12, "loot");
         this._onMeaningfulAction();
       } else if (plot.state === "empty") {
@@ -1030,8 +1038,16 @@ export class Game {
       hp: Math.round(ns.hp),
       cabinPct: Math.round((this.world.cabin.hp / this.world.cabin.maxHp) * 100),
       record,
+      perfect: Math.round(ns.cabin) === 0,
       t: 5.2,
     };
+    // Onda 6: noite perfeita (cabana intacta) dá bônus de material
+    if (this.dawnCard.perfect) {
+      this.inv.madeira += 3;
+      this.inv.pedra += 2;
+      this.floater(this.player.x, this.player.y - 26, "NOITE PERFEITA! +3 madeira +2 pedra", "#ffd76a");
+      this.vibrate([14, 40, 14, 40, 24]);
+    }
     this.juice(2.5, 0.22, "dawn");
     this.vignette = Math.max(this.vignette || 0, 0.35);
     this._banner(`O sol nasceu. Noites sobrevivídas: ${this.nightsSurvived}`);
@@ -1234,6 +1250,19 @@ export class Game {
     if (!z || z === this.player) return;
     if (!Number.isFinite(dmg) || dmg <= 0) return;
     if (z.hp <= 0) return;
+    // Onda 6: golpe crítico no corpo a corpo (mais chance com sequência ativa)
+    if (src === "attack") {
+      const chance = ((this.streak && this.streak.n) || 0) >= 3 ? 0.25 : 0.15;
+      if (Math.random() < chance) {
+        dmg *= 1.8;
+        this.floater(z.x, z.y - 30, "CRÍTICO!", "#ffd34d");
+        this.burst(z.x, z.y, 10, "#ffd34d", 120);
+        this.shake = Math.max(this.shake, 7);
+        this.hitStop(60);
+        this.vibrate([10, 20, 22]);
+        this.juice(5, 0.12, "loot");
+      }
+    }
     z.hp -= dmg;
     z.hurt = 0.35;
     if (Number.isFinite(kx)) z.x += kx * 0.012;
