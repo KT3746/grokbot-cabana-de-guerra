@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202610142225";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202610142225";
-import { MODE, PHASE } from "./game.js?v=202610142225";
+import { VERSION } from "./version.js?v=202611090920";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202611090920";
+import { MODE, PHASE } from "./game.js?v=202611090920";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -216,6 +216,8 @@ function sync(game, audio) {
   syncDawn(game);
   syncStreak(game);
   syncWaveSplash(game);
+  syncCraftSplash(game);
+  syncRemainSplash(game);
   syncResFlash(game);
   const $ = (id) => document.getElementById(id);
   $("ver").textContent = `v${VERSION}`;
@@ -335,6 +337,9 @@ function sync(game, audio) {
   const slots = document.querySelectorAll("#hotbar .slot");
   slots.forEach((el, i) => {
     el.classList.toggle("on", game.hot === i);
+    /* Onda 7: pulsa o slot Reparo quando a cabana está em perigo e há kits */
+    const meta0 = HOTBAR[i];
+    el.classList.toggle("slot-suggest", !!(game.suggestRepair && meta0 && meta0.id === "kit"));
     if (i === 0) {
       const w = WEAPONS[game.equipped];
       const html = `<span>${w.nome.split(" ")[0]}</span><small>arma</small>`;
@@ -459,15 +464,27 @@ function syncDawn(game) {
 function syncStreak(game) {
   const el = document.getElementById("streak-badge");
   if (!el) return;
-  const s = game.streak;
-  const show = !!(s && s.n >= 2 && game.mode === MODE.PLAY && !game.showCraft && !game.showTutorial);
+  const night = game.streak || { n: 0, t: 0 };
+  const work = game.work || { n: 0, t: 0 };
+  /* Onda 7: labuta diurna usa o mesmo selo, com estilo work */
+  let n = 0;
+  let mode = "kill";
+  if (work.n >= 2 && work.t > 0 && work.n >= (night.n || 0)) {
+    n = work.n;
+    mode = "work";
+  } else if (night.n >= 2 && night.t > 0) {
+    n = night.n;
+    mode = "kill";
+  }
+  const show = n >= 2 && game.mode === MODE.PLAY && !game.showCraft && !game.showTutorial;
   el.classList.toggle("hidden", !show);
+  el.classList.toggle("hot", n >= 5);
+  el.classList.toggle("is-work", mode === "work");
   if (!show) return;
-  const n = document.getElementById("streak-n");
-  const txt = `x${s.n}`;
-  if (n && n.textContent !== txt) n.textContent = txt;
-  el.classList.toggle("hot", s.n >= 5);
-  el.style.setProperty("--st", `${Math.max(0, Math.min(1, s.t / 2.8)).toFixed(2)}`);
+  const b = document.getElementById("streak-n");
+  if (b) b.textContent = `x${n}`;
+  const small = el.querySelector("small");
+  if (small) small.textContent = mode === "work" ? "labuta" : "sequência";
 }
 
 function syncWaveSplash(game) {
@@ -482,6 +499,32 @@ function syncWaveSplash(game) {
   if (txt && txt.textContent !== label) txt.textContent = label;
   el.classList.toggle("fading", w.t < 0.45);
 }
+
+function syncCraftSplash(game) {
+  const el = document.getElementById("craft-splash");
+  if (!el) return;
+  const s = game.craftSplash;
+  const show = !!(s && s.t > 0 && game.mode === MODE.PLAY && !game.showTutorial);
+  el.classList.toggle("hidden", !show);
+  el.classList.toggle("fading", !!(s && s.t < 0.35));
+  if (!show) return;
+  const nome = document.getElementById("craft-splash-nome");
+  if (nome && nome.textContent !== s.nome) nome.textContent = s.nome;
+}
+
+function syncRemainSplash(game) {
+  const el = document.getElementById("remain-splash");
+  if (!el) return;
+  const s = game.remainSplash;
+  const show = !!(s && s.t > 0 && game.mode === MODE.PLAY && !game.showCraft && !game.showTutorial);
+  el.classList.toggle("hidden", !show);
+  el.classList.toggle("fading", !!(s && s.t < 0.35));
+  if (!show) return;
+  const txt = document.getElementById("remain-splash-txt");
+  const msg = s.n === 1 ? "Resta 1!" : `Restam ${s.n}!`;
+  if (txt && txt.textContent !== msg) txt.textContent = msg;
+}
+
 
 const _resPrev = { madeira: -1, pedra: -1, comida: -1, ferro: -1, sementes: -1 };
 const _resFlashT = {};

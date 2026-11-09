@@ -1598,3 +1598,66 @@ button.primary,
 .dawn-perfect.hidden { display: none; }
 @keyframes dawn-perf-pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .dawn-perfect { animation: none; } }
+
+
+/* ===== Onda 7 (1.10.0): labuta, criação celebrada, reparo sugerido, restam N ===== */
+.streak-badge.is-work {
+  border-color: rgba(120, 220, 140, 0.55);
+  box-shadow: 0 0 18px rgba(80, 200, 120, 0.35);
+}
+.streak-badge.is-work b { color: #b8ffc4; }
+.slot.slot-suggest {
+  animation: cabana-slot-suggest 1s ease-in-out infinite;
+  box-shadow: 0 0 0 2px rgba(242, 204, 143, 0.85), 0 0 16px rgba(242, 204, 143, 0.45);
+}
+@keyframes cabana-slot-suggest {
+  0%, 100% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-2px); filter: brightness(1.18); }
+}
+.craft-splash {
+  position: fixed;
+  left: 50%;
+  top: 36%;
+  transform: translate(-50%, -50%);
+  z-index: 28;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: rgba(10, 14, 20, 0.78);
+  border: 1px solid rgba(255, 215, 106, 0.55);
+  pointer-events: none;
+  text-align: center;
+}
+.craft-splash b {
+  font-size: clamp(22px, 6vw, 34px);
+  color: #ffd76a;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 16px rgba(255, 200, 80, 0.7);
+}
+.craft-splash span { color: #f4efe4; font-size: 14px; opacity: 0.9; }
+.craft-splash.fading { opacity: 0; transition: opacity 0.3s ease; }
+.craft-splash.hidden { display: none; }
+.remain-splash {
+  position: fixed;
+  left: 50%;
+  top: 28%;
+  transform: translate(-50%, -50%);
+  z-index: 27;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(60, 8, 8, 0.78);
+  border: 1px solid rgba(255, 120, 100, 0.55);
+  color: #ffc4b8;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+.remain-splash.fading { opacity: 0; transition: opacity 0.3s ease; }
+.remain-splash.hidden { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .slot.slot-suggest { animation: none; }
+  .craft-splash.fading, .remain-splash.fading { transition: none; opacity: 1; }
+}

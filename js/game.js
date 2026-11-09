@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202610142225";
+} from "./data.js?v=202611090920";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202610142225";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202610142225";
+} from "./world.js?v=202611090920";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202611090920";
 
 function brtDateKey() {
   try {
@@ -122,6 +122,9 @@ export class Game {
     this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0 };
     this.dawnCard = null;
     this.streak = { n: 0, t: 0 }; // wave5: sequência de nocautes
+    this.work = { n: 0, t: 0 }; // onda 7: sequência diurna
+    this.craftSplash = null; // { nome, t }
+    this.remainSplash = null; // { n, t }
     this.waveSplash = null; // { n, t } anúncio de onda
     this.resetRun();
   }
@@ -197,6 +200,9 @@ export class Game {
     this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0 };
     this.dawnCard = null;
     this.streak = { n: 0, t: 0 };
+    this.work = { n: 0, t: 0 };
+    this.craftSplash = null;
+    this.remainSplash = null;
     this.waveSplash = null;
     if (this.audio) this.audio.setNight(false);
   }
@@ -509,9 +515,33 @@ export class Game {
       this.streak.t -= dt;
       if (this.streak.t <= 0) this.streak = { n: 0, t: 0 };
     }
+    if (this.work && this.work.n > 0) {
+      this.work.t -= dt;
+      if (this.work.t <= 0) this.work = { n: 0, t: 0 };
+    }
+    if (this.craftSplash) {
+      this.craftSplash.t -= dt;
+      if (this.craftSplash.t <= 0) this.craftSplash = null;
+    }
+    if (this.remainSplash) {
+      this.remainSplash.t -= dt;
+      if (this.remainSplash.t <= 0) this.remainSplash = null;
+    }
     if (this.waveSplash) {
       this.waveSplash.t -= dt;
       if (this.waveSplash.t <= 0) this.waveSplash = null;
+    }
+    /* Onda 7: aviso dos últimos zumbis */
+    if (this.phase === PHASE.NIGHT && !this.finished) {
+      const zc = this.aliveZombies ? this.aliveZombies() : 0;
+      if (zc > 0 && zc <= 3 && this._remainLatch !== zc) {
+        this._remainLatch = zc;
+        this.remainSplash = { n: zc, t: 1.6 };
+        this.vibrate([10, 30, 10]);
+      }
+      if (zc === 0) this._remainLatch = 0;
+    } else {
+      this._remainLatch = 0;
     }
   }
 
@@ -724,6 +754,7 @@ export class Game {
         this.toast("Cortou uma árvore (+" + n + " madeira)");
         this.juice(2.2, 0.14, "loot");
         this.goals.chop = true;
+        this._noteWork();
         this._onMeaningfulAction();
       } else {
         this._onMeaningfulAction();
@@ -749,6 +780,7 @@ export class Game {
         this.floater(rock.x, rock.y - 8, `+${n} pedra`, "#9aa3ad");
         this.toast("Quebrou uma pedra (+" + n + " pedra)");
         this.juice(2.0, 0.12, "loot");
+        this._noteWork();
         this._onMeaningfulAction();
       } else {
         this._onMeaningfulAction();
@@ -774,6 +806,7 @@ export class Game {
         this.floater(vein.x, vein.y - 8, `+${n} ferro`, "#d7dee4");
         this.toast("Minerou ferro (+" + n + " ferro)");
         this.juice(2.2, 0.14, "loot");
+        this._noteWork();
         this._onMeaningfulAction();
       } else {
         this._onMeaningfulAction();
@@ -803,6 +836,7 @@ export class Game {
           this.floater(plot.tx * TILE, plot.ty * TILE - 16, "SAFRA BOA! +1", "#ffd76a");
         }
         this.juice(2.0, 0.12, "loot");
+        this._noteWork();
         this._onMeaningfulAction();
       } else if (plot.state === "empty") {
         if (this.inv.sementes <= 0) {
@@ -889,6 +923,9 @@ export class Game {
     c.hp = Math.min(c.maxHp, c.hp + 45);
     this.audio.craft();
     this.floater(c.x, c.y - 20, "+45 cabana", "#f2cc8f");
+    this.burst(c.x, c.y - 8, 12, "#f2cc8f", 80);
+    this.juice(2.2, 0.14, "dawn");
+    this.vibrate([12, 30, 12]);
     this.toast("Cabana reparada.");
   }
 
@@ -931,7 +968,10 @@ export class Game {
       this.toast(`Criou ${rec.nome}.`);
     }
     this.audio.craft();
-    this.juice(1.6, 0.1, "loot");
+    this.juice(2.4, 0.16, "loot");
+    this.burst(this.player.x, this.player.y - 10, 14, "#ffd76a", 90);
+    this.craftSplash = { nome: rec.nome, t: 1.35 };
+    this.vibrate([10, 25, 10]);
     this.goals.build = true;
     this._onMeaningfulAction();
     return true;
@@ -1003,6 +1043,10 @@ export class Game {
     this.nightStats = { kills: 0, sun: 0, cabin: 0, hp: 0, cabinStart: this.world.cabin.hp };
     this.dawnCard = null;
     this.streak = { n: 0, t: 0 };
+    this.work = { n: 0, t: 0 };
+    this.craftSplash = null;
+    this.remainSplash = null;
+    this._remainLatch = 0;
     this.waveSplash = null;
     try { this.audio.siren(); } catch (_) { /* ok */ }
     // Flash curto de alerta; juice() já respeita prefers-reduced-motion.
@@ -1428,6 +1472,7 @@ export class Game {
     if (!any) this._dangerBuzzed = false;
     this.dangerHp = dangerHp;
     this.dangerCabin = dangerCabin;
+    this.suggestRepair = !!(dangerCabin && (this.inv.kits || 0) > 0);
     if (any && !this._reduceMotion()) {
       this.vignette = Math.max(this.vignette || 0, dangerHp ? 0.32 : 0.22);
     }
@@ -1446,6 +1491,22 @@ export class Game {
       if (s.n === 3 || s.n === 5 || s.n === 8) this.juice(3.0, 0.14, "loot");
     }
   }
+
+  /** Onda 7: sequência diurna de labuta (corta/mina/colhe em 2.5s). */
+  _noteWork() {
+    if (this.phase !== PHASE.DAY && this.phase !== PHASE.DAWN) return;
+    const s = this.work || { n: 0, t: 0 };
+    if (s.t > 0) s.n += 1;
+    else s.n = 1;
+    s.t = 2.5;
+    this.work = s;
+    if (s.n >= 2) {
+      this.floater(this.player.x, this.player.y - 30, `x${s.n} labuta`, "#9dffa3");
+      this.vibrate([6, 14, 6]);
+      if (s.n === 3 || s.n === 5 || s.n === 8) this.juice(2.4, 0.12, "loot");
+    }
+  }
+
 
   /** Wave5: mira soft no toque - zumbi vivo mais perto dentro do alcance+folga. */
   _softAimZombie() {
