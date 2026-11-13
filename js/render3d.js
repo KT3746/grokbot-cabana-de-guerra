@@ -4,9 +4,9 @@
  * Se o WebGL falhar, o main.js cai no canvas 2D.
  */
 import * as THREE from "three";
-import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202611090920";
-import { T } from "./world.js?v=202611090920";
-import { MODE } from "./game.js?v=202611090920";
+import { TILE, SCALE, hash2, WEAPONS } from "./data.js?v=202611122230";
+import { T } from "./world.js?v=202611122230";
+import { MODE } from "./game.js?v=202611122230";
 
 const DAY_FOG = 0x87a090;
 const DUSK_FOG = 0x4a2818;
@@ -416,6 +416,13 @@ export class Render3D {
 
   _clearWorld() {
     if (!this.worldRoot) return;
+    for (const m of this._cabinFadeMats || []) m.dispose();
+    this._cabinFadeMats = [];
+    for (const t of this.trees3d || []) {
+      const f = t.userData && t.userData.fade;
+      if (f) { f.m1.dispose(); f.m2.dispose(); }
+    }
+    this._cabinFade = 1;
     const dump = [];
     this.worldRoot.traverse((o) => {
       if (o !== this.worldRoot) dump.push(o);
@@ -545,13 +552,23 @@ export class Render3D {
     const cz = c.ty + 2.5;
     g.position.set(cx, 0, cz);
 
-    g.add(this._mesh(this.geo.box, this.mat.wood, 0, 1.05, 0, 4.8, 1.9, 4.4));
-    g.add(this._mesh(this.geo.box, this.mat.woodHi, 0, 1.05, 0, 4.5, 1.7, 4.1));
+    /* Onda 8: materiais próprios da cabana para ela poder ficar translúcida quando tapa você. */
+    const fadeMat = (m) => {
+      const c = m.clone();
+      c.transparent = true;
+      c.opacity = 1;
+      this._cabinFadeMats.push(c);
+      return c;
+    };
+    this._cabinFadeMats = [];
+    const matWood = fadeMat(this.mat.wood);
+    g.add(this._mesh(this.geo.box, matWood, 0, 1.05, 0, 4.8, 1.9, 4.4));
+    g.add(this._mesh(this.geo.box, fadeMat(this.mat.woodHi), 0, 1.05, 0, 4.5, 1.7, 4.1));
 
-    const roof = this._mesh(this.geo.prism, this.mat.roof, 0, 2.25, 0, 4.7, 1.5, 4.9);
+    const roof = this._mesh(this.geo.prism, fadeMat(this.mat.roof), 0, 2.25, 0, 4.7, 1.5, 4.9);
     roof.rotation.y = Math.PI / 4;
     g.add(roof);
-    const roofCap = this._mesh(this.geo.prism, this.mat.roofDark, 0, 2.4, 0, 4.85, 0.4, 5.05);
+    const roofCap = this._mesh(this.geo.prism, fadeMat(this.mat.roofDark), 0, 2.4, 0, 4.85, 0.4, 5.05);
     roofCap.rotation.y = Math.PI / 4;
     g.add(roofCap);
 
@@ -559,7 +576,7 @@ export class Render3D {
     const winL = this._mesh(this.geo.box, this.mat.winGlass, -1.4, 1.28, 2.18, 0.72, 0.52, 0.1);
     const winR = this._mesh(this.geo.box, this.mat.winGlass, 1.4, 1.28, 2.18, 0.72, 0.52, 0.1);
     g.add(winL, winR);
-    g.add(this._mesh(this.geo.box, this.mat.wood, 1.6, 2.55, -0.4, 0.3, 0.75, 0.3));
+    g.add(this._mesh(this.geo.box, matWood, 1.6, 2.55, -0.4, 0.3, 0.75, 0.3));
 
     const hpBack = this._mesh(this.geo.box, this.mat.hpBack, 0, 2.95, 0, 2.4, 0.08, 0.08);
     const hpFill = this._mesh(this.geo.box, this.mat.cabinHp, 0, 2.95, 0.02, 2.32, 0.06, 0.06);
@@ -636,6 +653,64 @@ export class Render3D {
     this._syncActors(g);
     this._syncFx(g);
     this._syncCamera(g, dt);
+    this._syncOcclusion(g, dt);
+  }
+
+  /* Onda 8: cabana e copas ficam translúcidas quando tapam você (ou um zumbi atrás da cabana). */
+  _syncOcclusion(g, dt) {
+    const p = g.player;
+    if (!p) return;
+    const px = this._wx(p.x);
+    const pz = this._wz(p.y);
+    const k = 1 - Math.exp(-10 * Math.max(0.001, dt || 0.016));
+    if (this.cabin3d && this._cabinFadeMats && this._cabinFadeMats.length) {
+      const c = this.cabin3d.position;
+      const behind = (x, z) => Math.abs(x - c.x) < 2.9 && z > c.z - 3.9 && z < c.z + 0.4;
+      let hide = behind(px, pz);
+      if (!hide && g.zombies) {
+        for (const zb of g.zombies) {
+          if (zb && zb.hp > 0 && behind(this._wx(zb.x), this._wz(zb.y))) { hide = true; break; }
+        }
+      }
+      const want = hide && g.mode !== MODE.MENU ? 0.32 : 1;
+      this._cabinFade = (this._cabinFade ?? 1) + (want - (this._cabinFade ?? 1)) * k;
+      const op = this._cabinFade > 0.985 ? 1 : this._cabinFade;
+      for (const m of this._cabinFadeMats) {
+        m.opacity = op;
+        m.depthWrite = op >= 1;
+      }
+    }
+    for (const tree of this.trees3d) {
+      const ud = tree.userData;
+      if (!ud || !ud.leaf1.visible) continue;
+      const tx = tree.position.x;
+      const tz = tree.position.z;
+      const near = Math.abs(px - tx) < 1.05 && pz < tz + 0.25 && pz > tz - 1.7;
+      if (!near && !ud.fade) continue;
+      if (!ud.fade) {
+        const m1 = ud.leaf1.material.clone();
+        const m2 = ud.leaf2.material.clone();
+        m1.transparent = true;
+        m2.transparent = true;
+        ud.fade = { m1, m2, o: 1, base1: ud.leaf1.material, base2: ud.leaf2.material };
+        ud.leaf1.material = m1;
+        ud.leaf2.material = m2;
+      }
+      const f = ud.fade;
+      f.o += ((near ? 0.3 : 1) - f.o) * k;
+      if (!near && f.o > 0.985) {
+        ud.leaf1.material = f.base1;
+        ud.leaf2.material = f.base2;
+        f.m1.dispose();
+        f.m2.dispose();
+        ud.fade = null;
+        continue;
+      }
+      f.m1.opacity = f.o;
+      f.m2.opacity = f.o;
+      f.m1.depthWrite = false;
+      f.m2.depthWrite = false;
+    }
   }
 
   _syncLighting(g) {
@@ -979,7 +1054,9 @@ export class Render3D {
     this._look.z = lerp(this._look.z, tz, lerpAmt);
 
     const aspect = (g.viewW || 16) / Math.max(1, g.viewH || 9);
-    const span = aspect < 0.8 ? 12.2 : 13.6;
+    /* Onda 8: em pé, o fov vertical cortava a largura para ~5 m (a cabana tapava a tela).
+       Agora o celular em pé vê ~9,5 m de largura, e o resto fica como era. */
+    const span = aspect < 0.8 ? Math.min(22, Math.max(12.2, 9.5 / Math.max(0.3, aspect))) : 13.6;
     const fov = (this.camera.fov * Math.PI) / 180;
     const camH = (span * 0.5) / Math.tan(fov / 2);
     const back = camH * 0.42;

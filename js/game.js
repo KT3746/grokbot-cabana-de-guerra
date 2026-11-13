@@ -9,7 +9,7 @@ import {
   clamp,
   irand,
   rand,
-} from "./data.js?v=202611090920";
+} from "./data.js?v=202611122230";
 import {
   createWorld,
   T,
@@ -18,8 +18,8 @@ import {
   respawnMorning,
   randomEdgeSpawn,
   circleHitsSolid,
-} from "./world.js?v=202611090920";
-import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202611090920";
+} from "./world.js?v=202611122230";
+import { STORAGE_KEY, DAILY_KEY } from "./version.js?v=202611122230";
 
 function brtDateKey() {
   try {
@@ -1543,7 +1543,11 @@ export class Game {
     this.seenTutorial = true;
     localStorage.setItem("nnc-tutorial", "1");
     this._centerCam();
-    this.toast("WASD ou joystick para andar. Agir (E) coleta. Atacar na noite.");
+    const toque = typeof matchMedia === "function" &&
+      (matchMedia("(pointer: coarse)").matches || (typeof innerWidth === "number" && innerWidth <= 900));
+    this.toast(toque
+      ? "Joystick para andar. Agir coleta e constrói. Atacar à noite."
+      : "WASD ou setas para andar. Agir (E) coleta. Atacar (Espaço) à noite.");
     if (!this.seenFirstTip) {
       this.showFirstTip = true;
       this.runAge = 0;

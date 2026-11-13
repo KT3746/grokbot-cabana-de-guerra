@@ -4,7 +4,7 @@ Jogo de navegador (PC e celular): de **dia** você cultiva, coleta e fortalece u
 
 **Jogue agora:** [https://kt3746.github.io/grokbot-cabana-de-guerra/](https://kt3746.github.io/grokbot-cabana-de-guerra/)
 
-Versão atual: **1.10.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
+Versão atual: **1.11.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D se o aparelho não tiver WebGL. (aparece no rodapé da tela).
 
 ## Como jogar
 
@@ -20,6 +20,13 @@ Versão atual: **1.10.0** - gráfico 3D baixo-poli (Three.js), com fallback 2D s
 10. Meta soft do dia (BRT): noites sobrevividas hoje e melhor run do dia, também em `localStorage`.
 
 Coma para recuperar vida. Tochas iluminam a clareira. Cercas atrasam os zumbis.
+
+### Novidades 1.11.0 (onda 8)
+
+- **Celular em pé enxerga a clareira**: a câmera mostrava só ~5 m de largura (a cabana tapava a tela); agora mostra ~9,5 m e os zumbis aparecem antes de chegar.
+- **Visão livre**: a cabana fica translúcida quando você ou um zumbi está atrás dela, e a copa da árvore some um pouco quando tapa você.
+- **Avisos no lugar certo**: metas do dia e dica ficam logo abaixo do HUD (antes cobriam a barra de recursos) e os avisos do celular ficam acima dos botões.
+- **Texto certo no celular**: a primeira dica fala de joystick e botões, não de WASD/E.
 
 ### Novidades 1.10.0 (onda 7)
 
@@ -95,7 +102,7 @@ Não precisa instalar dependências: é HTML + CSS + JavaScript puro, com Three.
 - `css/game.css` - interface
 - `js/` - lógica, som, controles, `render.js` (2D de reserva) e `render3d.js` (cena Three.js)
 - `js/vendor/three.module.js` - Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
-- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202611090920`) para o navegador não ficar com versão antiga após uma atualização
+- Os arquivos usam `?v=YYYYMMDDHHMM` (ex.: `?v=202611122230`) para o navegador não ficar com versão antiga após uma atualização
 - `js/vendor/three.module.js` - Three.js r160 local (mesmo padrão de FRONTEIRA e ECO)
 - Se o WebGL falhar, o jogo continua no canvas 2D e mostra um aviso em português
 

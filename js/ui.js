@@ -1,6 +1,6 @@
-import { VERSION } from "./version.js?v=202611090920";
-import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202611090920";
-import { MODE, PHASE } from "./game.js?v=202611090920";
+import { VERSION } from "./version.js?v=202611122230";
+import { RECIPES, HOTBAR, WEAPONS, canPay } from "./data.js?v=202611122230";
+import { MODE, PHASE } from "./game.js?v=202611122230";
 
 function fmtDaily(d) {
   const nights = d && d.nights != null ? d.nights : 0;
@@ -210,8 +210,42 @@ function syncScreens(game) {
   document.getElementById("app").classList.toggle("craft-open", !!(game.showCraft && game.mode === MODE.PLAY));
 }
 
+/* Onda 8: avisos nunca encavalam no HUD de cima nem nos botões de toque. */
+let _layoutAt = 0;
+function syncLayout() {
+  const now = performance.now();
+  if (now - _layoutAt < 400) return;
+  _layoutAt = now;
+  const app = document.getElementById("app");
+  if (!app) return;
+  const H = window.innerHeight;
+  let top = 0;
+  for (const sel of [".hud-top", "#hotbar"]) {
+    const el = document.querySelector(sel);
+    if (!el || el.offsetParent === null) continue;
+    const r = el.getBoundingClientRect();
+    if (r.height && r.bottom < H * 0.45) top = Math.max(top, r.bottom);
+  }
+  if (top > 0) app.style.setProperty("--ui-top", `${Math.round(top + 8)}px`);
+  else app.style.removeProperty("--ui-top");
+  const touch = document.getElementById("touch");
+  const touchOn = !!(touch && !touch.classList.contains("hidden"));
+  app.classList.toggle("has-touch-ui", touchOn);
+  if (touchOn) {
+    let tTop = H;
+    for (const sel of [".touch-extra", ".touch-actions", ".stick"]) {
+      const el = document.querySelector(sel);
+      if (!el || el.offsetParent === null) continue;
+      const r = el.getBoundingClientRect();
+      if (r.height && r.top > H * 0.4) tTop = Math.min(tTop, r.top);
+    }
+    app.style.setProperty("--ui-bottom", `${Math.round(H - tTop + 10)}px`);
+  }
+}
+
 function sync(game, audio) {
   syncScreens(game);
+  syncLayout();
   syncThreats(game);
   syncDawn(game);
   syncStreak(game);
