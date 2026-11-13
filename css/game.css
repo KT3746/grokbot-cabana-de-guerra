@@ -1661,3 +1661,28 @@ button.primary,
   .slot.slot-suggest { animation: none; }
   .craft-splash.fading, .remain-splash.fading { transition: none; opacity: 1; }
 }
+
+/* ===== Onda 8: avisos abaixo do HUD e acima dos botões de toque ===== */
+#app .first-tip,
+#app .day-goals {
+  top: var(--ui-top, calc(58px + env(safe-area-inset-top)));
+}
+#app.has-touch-ui #toasts {
+  bottom: var(--ui-bottom, calc(8px + env(safe-area-inset-bottom) + 120px));
+}
+@media (orientation: portrait) and (max-width: 900px) {
+  #app.has-touch-ui .banner {
+    top: auto;
+    bottom: calc(var(--ui-bottom, 128px) + 44px);
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  #app.has-touch-ui .banner {
+    top: calc(var(--ui-top, 96px) + 54px);
+    bottom: auto;
+  }
+  #app.has-touch-ui #toasts {
+    right: auto;
+    max-width: min(46vw, 380px);
+  }
+}
